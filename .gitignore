@@ -1,0 +1,13 @@
+# Geometrias antigas, de antes da troca de .topojson/.geojson para .json. O gerador
+# nao consegue apagar arquivos nesta pasta, entao elas ficam no disco e ficam fora do
+# repositorio. Se voce apagar a mao, pode tirar estas duas linhas.
+dados/geo/*.topojson
+dados/geo/*.geojson
+
+# Versoes aposentadas da homepage
+index_v1.html
+proposta_v2.html
+
+# Rascunhos e pacotes de teste
+_*
+*.tgz

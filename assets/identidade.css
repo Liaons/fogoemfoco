@@ -1,0 +1,157 @@
+/* Identidade visual do Fogo em Foco.
+ *
+ * A paleta foi amostrada da capa do relatorio: o poente laranja no topo
+ * descendo para o azul profundo da base.
+ *
+ * Como o tema funciona:
+ *   :root                     tema claro, o padrao
+ *   prefers-color-scheme      segue o sistema quando o leitor nao escolheu nada
+ *   [data-tema="escuro"]      escolha explicita do leitor, vence o sistema
+ *   [data-tema="claro"]       idem, no sentido contrario
+ *
+ * As cores dos dados (rampa de ranque, sequencial, divergente) nao mudam entre
+ * os temas: sao a escala do relatorio e trocar de cor mudaria a leitura do mapa.
+ * O que muda e a moldura em volta delas.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* marca */
+  --laranja: #ee5911;
+  --laranja-acao: #c9450c;
+  --sobre-acao: #ffffff;   /* texto sobre o botao primario */
+  --laranja-claro: #f67e33;
+  --ambar: #f9a03f;
+  --azul: #1b1e5d;
+  --azul-claro: #2b3080;
+
+  /* superficies e texto */
+  --fundo: #f6f2ec;           /* creme da homepage */
+  --superficie: #ffffff;
+  --superficie-2: #fbf8f3;
+  --escuro: #0a0c1c;          /* barras e rodape: mesma tinta da homepage */
+  --sobre-escuro: #f6f2ec;
+  --sobre-escuro-2: rgba(246,242,236,.66);
+  --texto: #0a0c1c;           /* tinta da homepage */
+  --suave: #5f6275;
+  --borda: #e3dcd2;
+  --realce: #f9a03f;          /* cor de foco */
+  --selecionado: #c9450c;     /* fundo do item ativo: laranja escuro, 4,8:1 com texto branco */
+  --sobre-selecionado: #ffffff;
+  --sombra: rgba(27,30,93,.08);
+  --mapa-fundo: #ebe6de;
+  --linha-mapa: #ffffff;
+  --grade-grafico: #ebe6de;
+  --serie-media: #a9a49c;
+  --basemap: World_Light_Gray_Base;   /* camada do Esri Canvas, sem chave de API */
+  --basemap-opacidade: .55;
+
+  /* estados de dado no mapa */
+  --sem-fogo: #e9e4dc;        /* nunca queimou na serie: zero de verdade */
+  --fora: #ffffff;            /* fora do processamento: sem informacao */
+  --sem-analise: #c4beb5;     /* nem chegou a ser analisado: so nos assentamentos */
+  --fora-opacidade: .25;
+
+  /* Rampa de ranque. Vai do vermelho escuro (ranque 1, maior registro da serie)
+     ao azul claro (ranque 24, menor registro), como diz a legenda das figuras do
+     relatorio. A versao impressa terminava em azul escuro, o que deixava os dois
+     extremos com a mesma claridade: em preto e branco, ou em daltonismo severo, o
+     ano mais brando aparecia mais escuro que o pior. Aqui a claridade separa os
+     extremos (0,26 contra 0,63) sem trocar a viagem de cor. */
+  --r1: #6e0120; --r2: #a5122a; --r3: #d43418; --r4: #ee5911; --r5: #f89a3d;
+  --r6: #fbcf87; --r7: #e3e9f4; --r8: #c3cee6; --r9: #9fadd2;
+
+  /* Azuis profundos da rampa antiga, mantidos so para a escala divergente, onde
+     o extremo negativo precisa de peso visual proprio. */
+  --dv1: #1b1e5d; --dv2: #4a5aa0; --dv3: #8f9fc8;
+
+  /* Big Shoulders Display foi desenhada para contexto civico e de dados. Condensada,
+     ela cabe titulo longo em portugues sem quebrar em quatro linhas, e o peso alto
+     conversa com o lettering em pincel da capa sem competir com ele. */
+  --display: 'Big Shoulders Display', 'Arial Narrow', system-ui, sans-serif;
+  --sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  /* nome antigo, mantido para nao quebrar regra esquecida */
+  --serif: var(--display);
+}
+
+/* tema escuro: pelo sistema, quando o leitor nao escolheu */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    color-scheme: dark;
+    /* Tons de cinza neutro. O azul fica reservado aos dados, na rampa de ranque:
+       se a moldura tambem for azul, o mapa e a interface competem entre si. */
+    --fundo: #141518;
+    --superficie: #1d1e22;
+    --superficie-2: #26272c;
+    --escuro: #0d0e10;
+    --texto: #ecedef;
+    --suave: #a1a2aa;
+    --borda: #34353c;
+    --sombra: rgba(0,0,0,.45);
+    --mapa-fundo: #121316;
+    --linha-mapa: #1d1e22;
+    --grade-grafico: #2d2e34;
+    --serie-media: #7a7b83;
+    --basemap: World_Dark_Gray_Base;
+    --basemap-opacidade: .45;
+    --sem-fogo: #3c3d45;
+    --fora: #1a1b1f;
+    --sem-analise: #56575f;
+    --fora-opacidade: .55;
+    --selecionado: #ff8143;
+    --sobre-selecionado: #1a1b1f;
+    /* o laranja da capa fica escuro demais sobre fundo noturno em texto pequeno */
+    --laranja-acao: #ff8143;
+    /* e claro demais para receber texto branco: o botao passa a usar texto escuro */
+    --sobre-acao: #1a1b1f;
+  }
+}
+
+/* escolha explicita do leitor */
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  /* Tons de cinza neutro. O azul fica reservado aos dados, na rampa de ranque:
+     se a moldura tambem for azul, o mapa e a interface competem entre si. */
+  --fundo: #141518;
+  --superficie: #1d1e22;
+  --superficie-2: #26272c;
+  --escuro: #0d0e10;
+  --texto: #ecedef;
+  --suave: #a1a2aa;
+  --borda: #34353c;
+  --sombra: rgba(0,0,0,.45);
+  --mapa-fundo: #121316;
+  --linha-mapa: #1d1e22;
+  --grade-grafico: #2d2e34;
+  --serie-media: #7a7b83;
+  --basemap: World_Dark_Gray_Base;
+  --basemap-opacidade: .45;
+  --sem-fogo: #3c3d45;
+  --fora: #1a1b1f;
+  --sem-analise: #56575f;
+  --fora-opacidade: .55;
+  --selecionado: #ff8143;
+  --sobre-selecionado: #1a1b1f;
+  /* o laranja da capa fica escuro demais sobre fundo noturno em texto pequeno */
+  --laranja-acao: #ff8143;
+  /* e claro demais para receber texto branco: o botao passa a usar texto escuro */
+  --sobre-acao: #1a1b1f;
+}
+
+/* botao de tema, igual nas duas paginas */
+.tema {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--borda); background: transparent; color: inherit;
+  line-height: 0; flex: none;
+}
+.tema:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.tema svg { width: 17px; height: 17px; }
+.tema .lua { display: none; }
+:root[data-tema="escuro"] .tema .lua { display: block; }
+:root[data-tema="escuro"] .tema .sol { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .tema .lua { display: block; }
+  :root:not([data-tema="claro"]) .tema .sol { display: none; }
+}
