@@ -62,10 +62,13 @@
      extremos (0,26 contra 0,63) sem trocar a viagem de cor. */
   /* Os dois primeiros colocados saem do gradiente e ganham cor propria, porque a
      diferenca entre o 1o e o 3o e o que mais importa e era justamente onde a rampa
-     apertava. Preto e roxo nao pertencem a viagem quente-fria, e e essa estranheza
-     que os destaca. Levam contorno claro (--linha-top) para nao sumirem no escuro. */
-  --r-top1: #0d0e13;          /* 1o lugar */
-  --r-top2: #46206b;          /* 2o lugar */
+     apertava. Os dois sao roxos, cor que nao pertence a viagem quente-fria da rampa, e
+     e essa estranheza que os destaca; a claridade separa um do outro (0,20 contra 0,34).
+     Levam contorno claro (--linha-top) para nao sumirem no escuro.
+     O roxo do 2o e o mesmo de --dv-topo: as duas escalas nunca aparecem juntas, e
+     repetir o tom mantem a identidade do mapa com menos cores no total. */
+  --r-top1: #26071f;          /* 1o lugar: ameixa quase preta */
+  --r-top2: #5e0f4e;          /* 2o lugar: o mesmo roxo do topo da anomalia (--dv-topo) */
 
   /* Do 3o ao 24o: vermelho escuro, vermelhos, laranjas, amarelo, cinza-azulados. */
   --r1: #8a1a10; --r2: #b8300f; --r3: #d64a0d; --r4: #ee5911; --r5: #f8912f;
@@ -79,7 +82,9 @@
      numa escala divergente o centro deve ser o menos chamativo. O preco e que ficam
      perto do fundo do mapa, o que aqui e aceitavel porque so 1,9% das feicoes caem
      entre -15% e 15%. E o extremo de cima, acima de 500%, sai do vermelho e vai para
-     o roxo: sao 187 feicoes que a rampa quente sozinha nao conseguia separar. */
+     o roxo: sao 187 feicoes que a rampa quente sozinha nao conseguia separar.
+     Os tres valem para os dois temas: a mesma anomalia tem que ter a mesma cor no claro
+     e no escuro, senao a figura do relatorio e a tela deixam de conversar. */
   --dv-alto: #fbe4b4;         /* 0 a 15% */
   --dv-baixo: #ccdcf5;        /* -15% a 0 */
   --dv-topo: #5e0f4e;         /* acima de 500% */
@@ -117,9 +122,6 @@
     --sem-fogo: #3c3d45;
     --fora: #1a1b1f;
     --sem-analise: #56575f;
-    /* no escuro o miolo da anomalia escurece: claro aqui seria o mais chamativo */
-    --dv-alto: #5a4a2c;
-    --dv-baixo: #2f3f70;
     --fora-opacidade: .55;
     --selecionado: #ff8143;
     --sobre-selecionado: #1a1b1f;
@@ -153,9 +155,6 @@
   --sem-fogo: #3c3d45;
   --fora: #1a1b1f;
   --sem-analise: #56575f;
-  /* no escuro o miolo da anomalia escurece: claro aqui seria o mais chamativo */
-  --dv-alto: #5a4a2c;
-  --dv-baixo: #2f3f70;
   --fora-opacidade: .55;
   --selecionado: #ff8143;
   --sobre-selecionado: #1a1b1f;

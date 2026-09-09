@@ -139,14 +139,14 @@ function corSequencial(v, faixa) {
   return SEQUENCIAL[Math.min(SEQUENCIAL.length - 1, Math.floor(t * SEQUENCIAL.length))];
 }
 
-// Dez classes, com o miolo aberto em duas (0 a 15% e -15% a 0) e um extremo proprio
-// acima de 500%. A distribuicao e muito assimetrica: 71% das feicoes estao em -100%,
-// e 3% passam de 500%, faixa que antes se perdia toda dentro do vermelho escuro.
+// Nove classes. O lado negativo tem tres, todas claras: quem queimou menos que a media
+// nao e a noticia, e o azul-marinho da versao anterior roubava a leitura do lado quente.
+// O lado positivo abre em cinco, com um extremo proprio acima de 500%: a distribuicao e
+// muito assimetrica (77% das feicoes abaixo de -70%, 3% acima de 500%).
 const DIVERGENTE = [
-  [-100, '--dv1'],       [-50, '--dv2'],      [-15, '--dv3'],
-  [0,    '--dv-baixo'],  [15,  '--dv-alto'],
-  [50,   '--r6'],        [150, '--r5'],       [300, '--r3'],
-  [500,  '--r1'],        [Infinity, '--dv-topo'],
+  [-70,  '--dv2'],       [-35, '--dv3'],      [0,   '--dv-baixo'],
+  [15,   '--dv-alto'],   [50,  '--r6'],       [150, '--r5'],
+  [300,  '--r3'],        [500, '--r1'],       [Infinity, '--dv-topo'],
 ];
 
 function corDivergente(v) {
