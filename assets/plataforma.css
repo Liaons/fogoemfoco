@@ -145,9 +145,16 @@ button, input { font: inherit; color: inherit; }
 .titulo-sel h3 { font-size: 26px; letter-spacing: .005em; }
 .titulo-sel p { margin: 5px 0 0; font-size: 13px; color: var(--suave); }
 
-.destaque { display: flex; align-items: baseline; gap: 12px; margin-top: 14px; }
-.destaque .n { font-family: var(--display); font-weight: 700; font-size: 48px; line-height: 1; color: var(--laranja-acao); }
-.destaque .rot { font-size: 13px; color: var(--suave); line-height: 1.4; }
+/* O rotulo tem duas linhas e o numero tem uma. Alinhar pela linha de base encostava a
+   primeira linha do rotulo no pe do numero e jogava a segunda para baixo dele, o que
+   deixava o bloco torto. Centralizado, os dois ficam equilibrados em qualquer tamanho
+   de numero, do "3o" curto ao "7.082,4 km2" longo. */
+.destaque { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.destaque .n {
+  font-family: var(--display); font-weight: 700; font-size: 46px; line-height: .95;
+  color: var(--laranja-acao); flex: none; font-variant-numeric: tabular-nums;
+}
+.destaque .rot { font-size: 13px; color: var(--suave); line-height: 1.4; min-width: 0; }
 
 .numeros-sel {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--borda);

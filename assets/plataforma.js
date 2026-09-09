@@ -139,7 +139,15 @@ function corSequencial(v, faixa) {
   return SEQUENCIAL[Math.min(SEQUENCIAL.length - 1, Math.floor(t * SEQUENCIAL.length))];
 }
 
-const DIVERGENTE = [[-100,'--dv1'],[-50,'--dv2'],[-15,'--dv3'],[15,'--r6'],[50,'--r5'],[150,'--r3'],[Infinity,'--r1']];
+// Dez classes, com o miolo aberto em duas (0 a 15% e -15% a 0) e um extremo proprio
+// acima de 500%. A distribuicao e muito assimetrica: 71% das feicoes estao em -100%,
+// e 3% passam de 500%, faixa que antes se perdia toda dentro do vermelho escuro.
+const DIVERGENTE = [
+  [-100, '--dv1'],       [-50, '--dv2'],      [-15, '--dv3'],
+  [0,    '--dv-baixo'],  [15,  '--dv-alto'],
+  [50,   '--r6'],        [150, '--r5'],       [300, '--r3'],
+  [500,  '--r1'],        [Infinity, '--dv-topo'],
+];
 
 function corDivergente(v) {
   for (const [lim, tok] of DIVERGENTE) if (v <= lim) return css(tok);
@@ -284,14 +292,23 @@ async function selecionar(rid, comZoom) {
 // O numero grande no topo do painel direito mostra a variavel que esta selecionada, e
 // nao sempre o ranque de area queimada. Sem isso, quem troca para "tamanho maximo" ve o
 // mapa mudar e o destaque continuar falando de outra coisa.
+// Numa anomalia, "44%" e "-42%" sao lados opostos da media, e so um deles carrega sinal.
+// Com o "+" explicito os dois se leem sem depender de lembrar a convencao.
+function comSinal(v, casas) {
+  return (v > 0 ? '+' : '') + nf(v, casas);
+}
+
+
 function destaqueDe(reg) {
   const def = VARIAVEIS.find(x => x.id === estado.variavel);
   if (!def) return '';
   const v = reg[def.id];
   if (v === null || v === undefined) return '';
+  const casas = def.casas === undefined ? 1 : def.casas;
+  const bruto = v * (def.fator || 1);
   const valor = def.escala === 'ranque'
     ? `${v}º`
-    : nf(v * (def.fator || 1), def.casas === undefined ? 1 : def.casas) + def.unidade;
+    : (def.escala === 'divergente' ? comSinal(bruto, casas) : nf(bruto, casas)) + def.unidade;
   return `<div class="destaque"><span class="n">${valor}</span>
        <span class="rot">${def.destaque}</span></div>`;
 }
@@ -329,7 +346,7 @@ function render(reg, sgfa, sclima) {
       <div class="numeros-sel">
         <div><b>${nf(reg.aq, 1)}</b><small>km² no período</small></div>
         <div><b>${nf(reg.aq_media, 1)}</b><small>km², média da série</small></div>
-        <div><b>${reg.aq_anom_pct === null ? '—' : nf(reg.aq_anom_pct, 0) + '%'}</b><small>contra a média</small></div>
+        <div><b>${reg.aq_anom_pct === null ? '—' : comSinal(reg.aq_anom_pct, 0) + '%'}</b><small>contra a média</small></div>
         <div><b>${reg.aq_frac === null ? '—' : nf(reg.aq_frac * 100, 2) + '%'}</b><small>da área florestal</small></div>
       </div>
     </div>
@@ -529,7 +546,13 @@ function montarLegenda() {
     fundo = `linear-gradient(90deg,${paradas.join(',')})`;
     esquerda = '1º · maior registro'; direita = `${PERIODOS}º · menor registro`;
   } else if (def.escala === 'divergente') {
-    cores = [css('--r1'), css('--r3'), css('--r5'), css('--r6'), css('--dv3'), css('--dv2'), css('--dv1')];
+    // A anomalia e classificada, nao continua: o degrade suave misturava o bege e o
+    // azul claro do centro num tom so. Blocos duros mostram que sao duas classes, e
+    // e justamente ali, na virada do sinal, que a leitura importa.
+    const dv = DIVERGENTE.map(([, tok]) => css(tok)).reverse();
+    const passo = 100 / dv.length;
+    fundo = 'linear-gradient(90deg,' + dv.map(
+      (c, i) => `${c} ${i * passo}% ${(i + 1) * passo}%`).join(',') + ')';
     esquerda = 'acima da média da série'; direita = 'abaixo';
   } else {
     cores = SEQUENCIAL.slice().reverse();

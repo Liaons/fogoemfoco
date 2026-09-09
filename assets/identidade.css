@@ -75,6 +75,15 @@
      o extremo negativo precisa de peso visual proprio. */
   --dv1: #1b1e5d; --dv2: #4a5aa0; --dv3: #8f9fc8;
 
+  /* Miolo da anomalia, as duas classes coladas na media. Sao claras de proposito:
+     numa escala divergente o centro deve ser o menos chamativo. O preco e que ficam
+     perto do fundo do mapa, o que aqui e aceitavel porque so 1,9% das feicoes caem
+     entre -15% e 15%. E o extremo de cima, acima de 500%, sai do vermelho e vai para
+     o roxo: sao 187 feicoes que a rampa quente sozinha nao conseguia separar. */
+  --dv-alto: #fbe4b4;         /* 0 a 15% */
+  --dv-baixo: #ccdcf5;        /* -15% a 0 */
+  --dv-topo: #5e0f4e;         /* acima de 500% */
+
   /* Big Shoulders Display foi desenhada para contexto civico e de dados. Condensada,
      ela cabe titulo longo em portugues sem quebrar em quatro linhas, e o peso alto
      conversa com o lettering em pincel da capa sem competir com ele. */
@@ -108,6 +117,9 @@
     --sem-fogo: #3c3d45;
     --fora: #1a1b1f;
     --sem-analise: #56575f;
+    /* no escuro o miolo da anomalia escurece: claro aqui seria o mais chamativo */
+    --dv-alto: #5a4a2c;
+    --dv-baixo: #2f3f70;
     --fora-opacidade: .55;
     --selecionado: #ff8143;
     --sobre-selecionado: #1a1b1f;
@@ -141,6 +153,9 @@
   --sem-fogo: #3c3d45;
   --fora: #1a1b1f;
   --sem-analise: #56575f;
+  /* no escuro o miolo da anomalia escurece: claro aqui seria o mais chamativo */
+  --dv-alto: #5a4a2c;
+  --dv-baixo: #2f3f70;
   --fora-opacidade: .55;
   --selecionado: #ff8143;
   --sobre-selecionado: #1a1b1f;
