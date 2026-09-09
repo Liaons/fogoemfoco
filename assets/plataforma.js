@@ -17,7 +17,7 @@ const DADOS = 'dados/';
 // Carimbo do conteudo de dados/, reescrito por 11_versionar_assets.py. Os JSONs e os
 // TopoJSONs sao buscados com fetch e o navegador os guarda em cache como qualquer outro
 // arquivo: sem este carimbo, trocar uma camada nao chega a quem ja visitou a pagina.
-const VERSAO_DADOS = 'ba47e28a';
+const VERSAO_DADOS = 'a1dce02a';
 
 const CAMADAS = [
   { id: 'UF',              rotulo: 'Estados',                 geo: 'uf.json',             tipo: 'geojson',  filtravel: false },
@@ -25,7 +25,10 @@ const CAMADAS = [
   { id: 'Biomas',          rotulo: 'Biomas',                  geo: 'biomas.json',         tipo: 'geojson',  filtravel: false },
   { id: 'UCs',             rotulo: 'Unidades de conservação', geo: 'ucs.json',           tipo: 'topojson', filtravel: true  },
   { id: 'TerrasIndigenas', rotulo: 'Terras indígenas',        geo: 'tis.json',           tipo: 'topojson', filtravel: true  },
-  { id: 'Assentamentos',   rotulo: 'Assentamentos',           geo: 'assentamentos.json', tipo: 'topojson', filtravel: true  },
+  // Assentamentos ficaram fora desta edicao: a analise cobriu 2.429 das 8.217 feicoes
+  // do INCRA, em doze estados. Para trazer de volta, descomente aqui e tire a camada de
+  // CAMADAS_OCULTAS em codigos/07_preparar_dados_web.py e 09_validar_dados_web.py.
+  // { id: 'Assentamentos',   rotulo: 'Assentamentos',           geo: 'assentamentos.json', tipo: 'topojson', filtravel: true  },
 ];
 
 const VARIAVEIS = [

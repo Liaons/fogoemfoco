@@ -75,6 +75,14 @@ O GitHub Pages aplica gzip sozinho. TopoJSON compartilha as fronteiras entre pol
 
 **As geometrias estão simplificadas** entre 1% e 4% dos vértices, com `keep-shapes`. Servem para exibição em tela, não para cálculo de área. Qualquer número de área vem das tabelas, nunca da geometria.
 
+## Assentamentos: fora desta edição
+
+A camada está oculta. A análise cobriu 2.429 das 8.217 feições do INCRA, em doze estados,
+e o grupo decidiu não publicar uma camada com três quartos do país em branco. O pipeline
+continua inteiro; o que muda é `CAMADAS_OCULTAS`, em `codigos/07_preparar_dados_web.py`.
+
+O que segue abaixo descreve como a camada funciona quando ligada.
+
 ## Assentamentos: cobertura parcial
 
 A geometria vem de `shapefile_2026/Assentamento_Brasil.shp`, o arquivo do INCRA para o
