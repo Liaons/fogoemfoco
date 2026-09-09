@@ -32,13 +32,23 @@ const CAMADAS = [
 ];
 
 const VARIAVEIS = [
-  { id: 'aq_ranque',          rotulo: 'Ranque de área queimada',       escala: 'ranque',     unidade: '',    curto: 'ranque' },
-  { id: 'aq',                 rotulo: 'Área queimada',                 escala: 'sequencial', unidade: ' km²', curto: 'área queimada' },
-  { id: 'aq_frac',            rotulo: 'Fração queimada',               escala: 'sequencial', unidade: ' %',   curto: 'fração queimada', fator: 100 },
-  { id: 'aq_anom_pct',        rotulo: 'Anomalia da área queimada',     escala: 'divergente', unidade: ' %',   curto: 'anomalia' },
-  { id: 'n_incendios_ranque', rotulo: 'Ranque de número de incêndios', escala: 'ranque',     unidade: '',    curto: 'ranque' },
-  { id: 'tam_max_ranque',     rotulo: 'Ranque de tamanho máximo dos incêndios', escala: 'ranque',     unidade: '',    curto: 'ranque' },
-  { id: 'taxa_max_ranque',    rotulo: 'Ranque de taxa máxima de crescimento', escala: 'ranque',     unidade: '',    curto: 'ranque' },
+  // Primeiro os ranques, que sao a leitura principal do relatorio. Depois os valores
+  // absolutos e, por ultimo, a anomalia. "destaque" e o texto que acompanha o numero
+  // grande no topo do painel direito, e muda junto com a variavel selecionada.
+  { id: 'aq_ranque',          rotulo: 'Ranque de área queimada',                escala: 'ranque',     unidade: '',     curto: 'ranque',
+    destaque: 'maior área queimada<br>na série desde 2002' },
+  { id: 'n_incendios_ranque', rotulo: 'Ranque de número de incêndios',          escala: 'ranque',     unidade: '',     curto: 'ranque',
+    destaque: 'maior número de incêndios<br>na série desde 2002' },
+  { id: 'tam_max_ranque',     rotulo: 'Ranque de tamanho máximo dos incêndios', escala: 'ranque',     unidade: '',     curto: 'ranque',
+    destaque: 'maior incêndio individual<br>na série desde 2002' },
+  { id: 'taxa_max_ranque',    rotulo: 'Ranque de taxa máxima de crescimento',   escala: 'ranque',     unidade: '',     curto: 'ranque',
+    destaque: 'maior taxa de crescimento<br>na série desde 2002' },
+  { id: 'aq',                 rotulo: 'Área queimada',                          escala: 'sequencial', unidade: ' km²', curto: 'área queimada', casas: 1,
+    destaque: 'de vegetação florestal<br>queimada no período' },
+  { id: 'aq_frac',            rotulo: 'Fração queimada',                        escala: 'sequencial', unidade: '%',    curto: 'fração queimada', fator: 100, casas: 2,
+    destaque: 'da área florestal<br>queimada no período' },
+  { id: 'aq_anom_pct',        rotulo: 'Anomalia da área queimada',              escala: 'divergente', unidade: '%',    curto: 'anomalia', casas: 0,
+    destaque: 'contra a média<br>da série desde 2002' },
 ];
 
 const MESES = ['mar','abr','mai','jun','jul','ago','set','out','nov','dez','jan','fev'];
@@ -55,6 +65,7 @@ const estado = {
   faixa: null,
   graficos: [],
   camadasPorRid: {},   // rid -> layer do Leaflet, para dar zoom pela busca
+  selecionado: null,   // rid aberto no painel direito, para redesenhar ao trocar de variavel
 };
 
 let mapa, camadaLeaflet, camadaBase;
@@ -102,13 +113,23 @@ function rampa() {
 
 /* ---------- cores ---------- */
 
+// O 1o e o 2o colocados tem cor propria. O gradiente cobre do 3o ao ultimo, o que
+// tambem alarga cada classe: antes 24 posicoes se espremiam em nove degraus.
 function corRanque(v) {
+  if (v === 1) return css('--r-top1');
+  if (v === 2) return css('--r-top2');
   const r = rampa();
-  const i = Math.min(r.length - 1, Math.floor(((v - 1) / PERIODOS) * r.length));
+  const faixa = Math.max(1, PERIODOS - 2);
+  const i = Math.min(r.length - 1, Math.max(0, Math.floor(((v - 3) / faixa) * r.length)));
   return r[i];
 }
 
-const SEQUENCIAL = ['#fdf0dd','#fbd08a','#f9a03f','#ee5911','#c9450c','#8c1d04'];
+function ehTopo(reg) {
+  const def = VARIAVEIS.find(x => x.id === estado.variavel);
+  return def && def.escala === 'ranque' && (reg[def.id] === 1 || reg[def.id] === 2);
+}
+
+const SEQUENCIAL = ['#fddc84','#fcb95a','#f8912f','#ee5911','#b8300f','#8a1a10'];
 
 function corSequencial(v, faixa) {
   if (!faixa || faixa[1] <= faixa[0]) return SEQUENCIAL[0];
@@ -198,7 +219,8 @@ function desenhar(ajustarZoom) {
       return {
         fillColor: corDe(reg),
         fillOpacity: reg && reg.estado_dado === 'fora' ? foraOp : 0.85,
-        color: linha, weight: grossa ? 1.1 : 0.35, opacity: 0.9,
+        color: ehTopo(reg) ? css('--linha-top') : linha,
+        weight: ehTopo(reg) ? 1.4 : (grossa ? 1.1 : 0.35), opacity: 0.9,
       };
     },
     onEachFeature: (f, layer) => {
@@ -250,6 +272,7 @@ function trocarBase() {
 async function selecionar(rid, comZoom) {
   const reg = estado.atributos[estado.camada][rid];
   if (!reg) return;
+  estado.selecionado = rid;
   const gfa = await serie('gfa', estado.camada, reg.chunk || null);
   const clima = await serie('clima', estado.camada, reg.chunk || null);
   render(reg, gfa[rid], clima[rid]);
@@ -257,6 +280,22 @@ async function selecionar(rid, comZoom) {
   if (comZoom && layer && layer.getBounds) mapa.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 9 });
   if (layer) layer.openTooltip();
 }
+
+// O numero grande no topo do painel direito mostra a variavel que esta selecionada, e
+// nao sempre o ranque de area queimada. Sem isso, quem troca para "tamanho maximo" ve o
+// mapa mudar e o destaque continuar falando de outra coisa.
+function destaqueDe(reg) {
+  const def = VARIAVEIS.find(x => x.id === estado.variavel);
+  if (!def) return '';
+  const v = reg[def.id];
+  if (v === null || v === undefined) return '';
+  const valor = def.escala === 'ranque'
+    ? `${v}º`
+    : nf(v * (def.fator || 1), def.casas === undefined ? 1 : def.casas) + def.unidade;
+  return `<div class="destaque"><span class="n">${valor}</span>
+       <span class="rot">${def.destaque}</span></div>`;
+}
+
 
 function render(reg, sgfa, sclima) {
   estado.graficos.forEach(g => g.destroy());
@@ -276,10 +315,7 @@ function render(reg, sgfa, sclima) {
        em nenhum ano da série. Por isso não há ranque.</div></div>`
     : '';
 
-  const destaque = reg.aq_ranque
-    ? `<div class="destaque"><span class="n">${reg.aq_ranque}º</span>
-         <span class="rot">pior ano de área queimada<br>na série desde 2002</span></div>`
-    : '';
+  const destaque = destaqueDe(reg);
 
   $('#painel').innerHTML = `
     <div class="titulo-sel">
@@ -477,18 +513,32 @@ function montarLegenda() {
 
   // Uma faixa continua ocupa quatro linhas a menos que nove amostras empilhadas,
   // e a leitura do mapa nao depende de saber a posicao exata de cada classe.
-  let cores, esquerda, direita;
+  // Todas as faixas correm na mesma direcao: o que mais chama atencao fica a esquerda.
+  // Nas escalas de valor isso significa inverter a rampa em relacao ao mapa, onde o
+  // tom mais escuro continua sendo o maior valor.
+  let cores, esquerda, direita, fundo;
   if (def.escala === 'ranque') {
-    cores = r; esquerda = '1º · maior registro'; direita = `${PERIODOS}º · menor registro`;
+    // Os dois primeiros aparecem como blocos, nao como parte do degrade: eles nao
+    // pertencem a rampa, e mostrar assim deixa claro que sao classes proprias.
+    const passo = 100 / (r.length + 2);
+    const paradas = [
+      `${css('--r-top1')} 0 ${passo}%`,
+      `${css('--r-top2')} ${passo}% ${2 * passo}%`,
+      ...r.map((c, i) => `${c} ${(i + 2) * passo}% ${(i + 3) * passo}%`),
+    ];
+    fundo = `linear-gradient(90deg,${paradas.join(',')})`;
+    esquerda = '1º · maior registro'; direita = `${PERIODOS}º · menor registro`;
   } else if (def.escala === 'divergente') {
-    cores = [css('--dv1'), css('--dv2'), css('--dv3'), css('--r6'), css('--r5'), css('--r3'), css('--r1')];
-    esquerda = 'abaixo da média da série'; direita = 'acima';
+    cores = [css('--r1'), css('--r3'), css('--r5'), css('--r6'), css('--dv3'), css('--dv2'), css('--dv1')];
+    esquerda = 'acima da média da série'; direita = 'abaixo';
   } else {
-    cores = SEQUENCIAL; esquerda = 'menor'; direita = 'maior';
+    cores = SEQUENCIAL.slice().reverse();
+    esquerda = 'maior'; direita = 'menor';
   }
+  if (!fundo) fundo = `linear-gradient(90deg,${cores.join(',')})`;
 
   $('#legenda-corpo').innerHTML = `
-    <span class="faixa" style="background:linear-gradient(90deg,${cores.join(',')})"></span>
+    <span class="faixa" style="background:${fundo}"></span>
     <span class="pontas"><span>${esquerda}</span><span>${direita}</span></span>
     <span class="linha"><i style="background:${css('--sem-fogo')}"></i>sem fogo na série</span>
     <span class="linha"><i style="background:${css('--fora')}"></i>fora do processamento</span>
@@ -513,6 +563,7 @@ function limparPainel() {
 async function trocarCamada(id) {
   estado.camada = id;
   estado.filtroUf = '';
+  estado.selecionado = null;
   $('#busca').value = '';
   $('#achados').innerHTML = '';
   ocupado(true, 'Carregando camada…');
@@ -534,9 +585,13 @@ function trocarVariavel(id) {
   calcularFaixa();
   desenhar(false);
   montarControles();
+  // O painel direito precisa ser refeito, senao o numero grande do topo continua
+  // mostrando a variavel anterior enquanto o mapa ja mudou.
+  if (estado.selecionado) selecionar(estado.selecionado, false);
 }
 
 function trocarFiltro(uf) {
+  estado.selecionado = null;
   estado.filtroUf = uf;
   calcularFaixa();
   desenhar(true);

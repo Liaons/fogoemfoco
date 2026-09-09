@@ -41,7 +41,8 @@
   --sobre-selecionado: #ffffff;
   --sombra: rgba(27,30,93,.08);
   --mapa-fundo: #ebe6de;
-  --linha-mapa: #ffffff;
+  --linha-mapa: #8f8b85;      /* contorno das feicoes: cinza medio */
+  --linha-top: #ffffff;       /* contorno do 1o e do 2o colocado */
   --grade-grafico: #ebe6de;
   --serie-media: #a9a49c;
   --basemap: World_Light_Gray_Base;   /* camada do Esri Canvas, sem chave de API */
@@ -59,8 +60,16 @@
      extremos com a mesma claridade: em preto e branco, ou em daltonismo severo, o
      ano mais brando aparecia mais escuro que o pior. Aqui a claridade separa os
      extremos (0,26 contra 0,63) sem trocar a viagem de cor. */
-  --r1: #6e0120; --r2: #a5122a; --r3: #d43418; --r4: #ee5911; --r5: #f89a3d;
-  --r6: #fbcf87; --r7: #e3e9f4; --r8: #c3cee6; --r9: #9fadd2;
+  /* Os dois primeiros colocados saem do gradiente e ganham cor propria, porque a
+     diferenca entre o 1o e o 3o e o que mais importa e era justamente onde a rampa
+     apertava. Preto e roxo nao pertencem a viagem quente-fria, e e essa estranheza
+     que os destaca. Levam contorno claro (--linha-top) para nao sumirem no escuro. */
+  --r-top1: #0d0e13;          /* 1o lugar */
+  --r-top2: #46206b;          /* 2o lugar */
+
+  /* Do 3o ao 24o: vermelho escuro, vermelhos, laranjas, amarelo, cinza-azulados. */
+  --r1: #8a1a10; --r2: #b8300f; --r3: #d64a0d; --r4: #ee5911; --r5: #f8912f;
+  --r6: #fcb95a; --r7: #fddc84; --r8: #d8e2f0; --r9: #a9b7d5;
 
   /* Azuis profundos da rampa antiga, mantidos so para a escala divergente, onde
      o extremo negativo precisa de peso visual proprio. */
@@ -91,6 +100,7 @@
     --sombra: rgba(0,0,0,.45);
     --mapa-fundo: #121316;
     --linha-mapa: #1d1e22;
+    --linha-top: #e8e6e0;
     --grade-grafico: #2d2e34;
     --serie-media: #7a7b83;
     --basemap: World_Dark_Gray_Base;
@@ -123,6 +133,7 @@
   --sombra: rgba(0,0,0,.45);
   --mapa-fundo: #121316;
   --linha-mapa: #1d1e22;
+  --linha-top: #e8e6e0;
   --grade-grafico: #2d2e34;
   --serie-media: #7a7b83;
   --basemap: World_Dark_Gray_Base;
