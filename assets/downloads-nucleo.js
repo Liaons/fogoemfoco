@@ -149,7 +149,7 @@
   FEFDownload.filtrarFeicoes = filtrarFeicoes;
   FEFDownload.montarTabela = montarTabela;
   const CITACAO = 'Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026. ' +
-    'Rede Brasa de Pesquisa. – São José dos Campos: INPE, 2025.';
+    'Rede Brasa de Pesquisa. – São José dos Campos: INPE, 2026.';
 
   const ID_DESC = {
     camada: ['recorte territorial (Estados, Municípios, Biomas, Unidades de conservação, Terras indígenas)', ''],
