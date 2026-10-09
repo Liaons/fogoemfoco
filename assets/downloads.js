@@ -496,7 +496,12 @@
       win.document.write(html);
       win.document.close();
       // espera as imagens e as fontes antes de imprimir
-      if (win.document.readyState !== 'complete') await new Promise(r => win.addEventListener('load', r, { once: true }));
+      // (com prazo: se a janela for fechada antes, o load nunca chega)
+      if (win.document.readyState !== 'complete') await new Promise(r => {
+        win.addEventListener('load', r, { once: true });
+        setTimeout(r, 10000);
+      });
+      if (win.closed) return;
       await win.document.fonts.ready;
       if (win.closed) return;
       win.focus();
