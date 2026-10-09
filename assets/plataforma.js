@@ -370,6 +370,8 @@ function desenhar(ajustarZoom) {
       estado.camadasPorRid[rid] = layer;
       layer.bindTooltip(dica(reg), { className: 'dica', sticky: true });
       layer.on('click', () => selecionar(rid));
+      // Duplo clique num estado abre os municipios dele (camada de municipios filtrada)
+      if (estado.camada === 'UF') layer.on('dblclick', (e) => { L.DomEvent.stop(e); abrirMunicipios(reg.uf); });
       layer.on('mouseover', () => layer.setStyle({ weight: 2, color: css('--realce') }));
       layer.on('mouseout', () => camadaLeaflet.resetStyle(layer));
     },
@@ -390,11 +392,17 @@ function valorTexto(reg, def) {
   return (def.escala === 'anomalia' || def.escala === 'diferenca' ? comSinal(bruto, casas) : nf(bruto, casas)) + def.unidade;
 }
 
+async function abrirMunicipios(uf) {
+  await trocarCamada('Municipios');
+  trocarFiltro(uf);
+}
+
 function dica(reg) {
   const def = defAtual();
   const vazio = semDado(reg, def);
   const valor = vazio ? vazio[1] : valorTexto(reg, def);
-  return `<b>${reg.nome}${reg.uf ? ' · ' + reg.uf : ''}</b><em>${def.rotulo.toLowerCase()}: ${valor}</em>`;
+  return `<b>${reg.nome}${reg.uf ? ' · ' + reg.uf : ''}</b><em>${def.rotulo.toLowerCase()}: ${valor}</em>` +
+    (estado.camada === 'UF' ? '<small class="dica-acao">duplo clique: ver os municípios</small>' : '');
 }
 
 function trocarBase() {
@@ -567,6 +575,12 @@ function baseGraf() {
   return {
     responsive: true, maintainAspectRatio: false, locale: 'pt-BR',
     interaction: { mode: 'index', intersect: false },
+    // barra sob o mouse ganha um contorno fino na cor do texto, sem mudar o preenchimento
+    // (a cor da barra carrega informacao: periodo atual, sinal da diferenca, tipo de evento)
+    elements: { bar: {
+      hoverBorderWidth: 1.5, hoverBorderColor: css('--texto'), borderSkipped: false,
+      hoverBackgroundColor: (c) => { const b = c.dataset.backgroundColor; return Array.isArray(b) ? b[c.dataIndex] : b; },
+    } },
     plugins: { legend: { display: false }, tooltip: dica },
     scales: {
       x: { grid: { display: false }, ticks: { color: css('--suave'), font: { size: 10 }, maxRotation: 0, autoSkipPadding: 12 } },
@@ -724,13 +738,13 @@ function grafEventos(s) {
     options: {
       ...base,
       scales: {
-        x: { ...base.scales.x, stacked: true },
+        x: { ...base.scales.x, stacked: true, ticks: eixoMeses(base) },
         y: { ...base.scales.y, stacked: true, beginAtZero: true },
       },
       plugins: {
         ...base.plugins,
         tooltip: { ...base.plugins.tooltip, displayColors: true, callbacks: {
-          title: (it) => it[0].label,
+          title: (it) => mesCompleto(it[0].label),
           label: (it) => `${it.dataset.label}: ${nf(it.parsed.y)}`,
           footer: (it) => 'total: ' + nf(it.reduce((a, x) => a + x.parsed.y, 0)),
         } },
@@ -748,6 +762,57 @@ function climaDaCamada() {
 
 // Diferenca mes a mes em relacao a media historica, em barras, como na figura do relatorio:
 // temperatura em °C (laranja acima, azul abaixo), chuva em mm (azul acima, laranja abaixo).
+// Rotulo do valor em cada barra, como nas figuras de clima do relatorio: acima da barra
+// positiva, abaixo da negativa. Temperatura com duas casas, na vertical (nao cabe deitado
+// na largura do painel); chuva em mm inteiros.
+// Eixo de meses: todos os doze, pela inicial (o nome inteiro nao cabe na largura do
+// painel). O mes por extenso aparece na dica ao passar o mouse.
+// "mar" -> "Março", para a dica dos graficos de meses
+function mesCompleto(abrev) {
+  const i = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].indexOf(abrev);
+  if (i < 0) return abrev;
+  const m = MESES_EXTENSO[i];
+  return m[0].toUpperCase() + m.slice(1);
+}
+
+function eixoMeses(base) {
+  return { ...base.scales.x.ticks, autoSkip: false, maxRotation: 0,
+           callback(v) { return String(this.getLabelForValue(v))[0].toUpperCase(); } };
+}
+
+const rotulosBarras = {
+  id: 'rotulosBarras',
+  afterDatasetsDraw(chart, args, op) {
+    if (!op || !op.ligado) return;
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.font = `${op.tamanho || 9}px "Instrument Sans", sans-serif`;
+    ctx.fillStyle = op.cor;
+    meta.data.forEach((barra, i) => {
+      const v = chart.data.datasets[0].data[i];
+      if (v === null || v === undefined) return;
+      const r = Math.round(v * 10 ** op.casas) / 10 ** op.casas;
+      const txt = r === 0 ? nf(0, op.casas) : comSinal(r, op.casas);
+      const cima = v >= 0;
+      const y = barra.y + (cima ? -3 : 3);
+      ctx.save();
+      ctx.translate(barra.x, y);
+      if (op.vertical) {
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = cima ? 'left' : 'right';
+        ctx.textBaseline = 'middle';
+      } else {
+        ctx.textAlign = 'center';
+        ctx.textBaseline = cima ? 'bottom' : 'top';
+      }
+      ctx.fillText(txt, 0, 0);
+      ctx.restore();
+    });
+    ctx.restore();
+  },
+};
+
 function grafDif(s, temp) {
   const base = baseGraf();
   const atual = temp ? s.t : s.p, media = temp ? s.t_media : s.p_media;
@@ -755,8 +820,13 @@ function grafDif(s, temp) {
   const casas = temp ? 2 : 0;
   const unidade = temp ? ' °C' : ' mm';
   const [pos, neg] = temp ? ['#d64a0d', '#8f9fc8'] : ['#4a5aa0', '#f8912f'];
+  // folga no eixo para os rotulos caberem acima e abaixo das barras
+  const vs = dif.filter(v => v !== null);
+  const ext = Math.max(...vs.map(Math.abs), temp ? 0.1 : 1);
+  const folga = ext * (temp ? 0.5 : 0.3);
   estado.graficos.push(new Chart($(temp ? '#g-temp-dif' : '#g-chuva-dif'), {
     type: 'bar',
+    plugins: [rotulosBarras],
     data: {
       labels: MESES,
       datasets: [{ data: dif, borderRadius: 2, categoryPercentage: 0.8, barPercentage: 0.9,
@@ -766,16 +836,21 @@ function grafDif(s, temp) {
       ...base,
       scales: {
         ...base.scales,
-        y: { ...base.scales.y, ticks: { ...base.scales.y.ticks,
+        x: { ...base.scales.x, ticks: eixoMeses(base) },
+        y: { ...base.scales.y,
+             suggestedMin: Math.min(0, ...vs) < 0 ? Math.min(...vs) - folga : 0,
+             suggestedMax: Math.max(0, ...vs) > 0 ? Math.max(...vs) + folga : 0,
+             ticks: { ...base.scales.y.ticks, maxTicksLimit: 5,
              callback: (v) => (v > 0 ? '+' : '') + nf(v, temp ? 1 : 0) } },
       },
       plugins: {
         ...base.plugins,
+        rotulosBarras: { ligado: true, casas, vertical: temp, cor: css('--texto'), tamanho: temp ? 8.5 : 9 },
         title: { display: true, align: 'start', color: css('--suave'),
                  font: { family: 'Instrument Sans', size: 11, weight: '600' },
                  text: temp ? 'Diferença em relação à média (°C)' : 'Diferença em relação à média (mm)' },
         tooltip: { ...base.plugins.tooltip, callbacks: {
-          title: (it) => it[0].label,
+          title: (it) => mesCompleto(it[0].label),
           label: (it) => comSinal(Math.round(it.parsed.y * 10 ** casas) / 10 ** casas || 0, casas) + unidade,
         } },
       },
@@ -800,7 +875,8 @@ function grafClima(s, temp) {
     options: {
       ...base,
       // temperatura nao comeca no zero: o eixo cheio esconde a anomalia
-      scales: { ...base.scales, y: { ...base.scales.y, beginAtZero: !temp } },
+      scales: { ...base.scales, x: { ...base.scales.x, ticks: eixoMeses(base) },
+                y: { ...base.scales.y, beginAtZero: !temp } },
       plugins: {
         ...base.plugins,
         legend: { display: false },
@@ -808,7 +884,7 @@ function grafClima(s, temp) {
                  font: { family: 'Instrument Sans', size: 11, weight: '600' },
                  text: temp ? 'Temperatura média (°C)' : 'Precipitação (mm)' },
         tooltip: { ...base.plugins.tooltip, callbacks: {
-          title: (it) => it[0].label,
+          title: (it) => mesCompleto(it[0].label),
           label: (it) => (it.datasetIndex === 0 ? 'período: ' : 'média histórica: ')
                           + nf(it.parsed.y, temp ? 1 : 0) + unidade,
         } },
