@@ -14,3 +14,7 @@ _*
 
 # Configuracao local do Claude Code (servidor de teste, worktrees): nao faz parte do site
 .claude/
+
+# Testes do navegador e documentos de planejamento: ficam so na copia local
+testes/
+docs/superpowers/
