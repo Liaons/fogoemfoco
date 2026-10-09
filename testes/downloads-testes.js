@@ -52,3 +52,48 @@ teste('catalogo: nomes de coluna unicos', () => {
   const nomes = D.CAMPOS.map(c => c.coluna);
   igual(new Set(nomes).size, nomes.length);
 });
+
+const ATRIB = {
+  UF: { '60000025': { nome: 'Bahia', uf: 'BA', cod: '29', aq: 1622.1302, aq_frac: 0.011529, aq_ranque: 4, focos: 11653 },
+        '60000005': { nome: 'Paraná', uf: 'PR', cod: '41', aq: 12.5, aq_frac: 0.0001, aq_ranque: 20, focos: null } },
+  Municipios: {
+    '1': { nome: 'Barra', uf: 'BA', chunk: 'BA', cod: '2903201', aq: 412.3, aq_ranque: 4 },
+    '2': { nome: 'Curitiba', uf: 'PR', chunk: 'PR', cod: '4106902', aq: null, aq_ranque: null },
+  },
+  Biomas: { '10000001': { nome: 'Amazônia', uf: null, cod: 'Amazônia', aq: 4305.8 } },
+  TerrasIndigenas: { '20000001': { nome: 'Acapuri de Cima', uf: 'AM', cod: '101' },
+                     '20000002': { nome: 'Kayabi', uf: 'MT, PA', cod: '200' } },
+};
+
+teste('filtro: brasil devolve todas, em ordem de nome', () => {
+  igual(D.filtrarFeicoes(ATRIB.Municipios, 'Municipios', { tipo: 'brasil' }).map(([r]) => r), ['1', '2']);
+});
+
+teste('filtro: um estado', () => {
+  igual(D.filtrarFeicoes(ATRIB.Municipios, 'Municipios', { tipo: 'uf', uf: 'PR' }).map(([r]) => r), ['2']);
+  igual(D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'uf', uf: 'BA' }).map(([r]) => r), ['60000025']);
+  igual(D.filtrarFeicoes(ATRIB.TerrasIndigenas, 'TerrasIndigenas', { tipo: 'uf', uf: 'MT' }).map(([r]) => r), ['20000002']);
+  igual(D.filtrarFeicoes(ATRIB.Biomas, 'Biomas', { tipo: 'uf', uf: 'BA' }).length, 1);
+});
+
+teste('filtro: so a area aberta, e so na camada dela', () => {
+  igual(D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'area', camada: 'UF', rid: '60000005' }).map(([r]) => r), ['60000005']);
+  igual(D.filtrarFeicoes(ATRIB.Municipios, 'Municipios', { tipo: 'area', camada: 'UF', rid: '60000005' }).length, 0);
+});
+
+teste('tabela: identificacao + campos, fator aplicado, nulo vazio', () => {
+  const t = D.montarTabela([{ camada: 'UF', rotulo: 'Estados',
+    feicoes: D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'brasil' }) }], ['aq_ranque', 'aq_frac', 'focos']);
+  igual(t.colunas, ['camada', 'region_id', 'codigo', 'nome', 'uf', 'ranque_area_queimada', 'aq_frac_pct', 'focos']);
+  igual(t.linhas[0], ['Estados', '60000025', '29', 'Bahia', 'BA', 4, 1.1529, 11653]);
+  igual(t.linhas[1][7], null);
+});
+
+teste('tabela: varias camadas empilhadas, campos na ordem do catalogo', () => {
+  const t = D.montarTabela([
+    { camada: 'UF', rotulo: 'Estados', feicoes: D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'uf', uf: 'BA' }) },
+    { camada: 'Municipios', rotulo: 'Municípios', feicoes: D.filtrarFeicoes(ATRIB.Municipios, 'Municipios', { tipo: 'uf', uf: 'BA' }) },
+  ], ['aq', 'aq_ranque']);
+  igual(t.colunas.slice(5), ['ranque_area_queimada', 'aq_km2']);
+  igual(t.linhas.map(l => l[0] + ':' + l[3]), ['Estados:Bahia', 'Municípios:Barra']);
+});

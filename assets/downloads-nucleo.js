@@ -96,4 +96,53 @@
 
   FEFDownload.BLOCOS = BLOCOS;
   FEFDownload.CAMPOS = CAMPOS;
+  const ID_COLUNAS = ['camada', 'region_id', 'codigo', 'nome', 'uf'];
+
+  function primeiraUf(v) {
+    return v ? String(v).split(',')[0].trim() : '';
+  }
+
+  // Ordem alfabetica pelo nome, ignorando acentos e maiusculas
+  function porNome(a, b) {
+    return String(a[1].nome || '').localeCompare(String(b[1].nome || ''), 'pt-BR', { sensitivity: 'base' });
+  }
+
+  // abrangencia: { tipo: 'brasil' } | { tipo: 'uf', uf: 'BA' } | { tipo: 'area', camada, rid }
+  function filtrarFeicoes(atributos, camada, abrangencia) {
+    const todas = Object.entries(atributos || {});
+    let sel;
+    if (abrangencia.tipo === 'area') {
+      sel = abrangencia.camada === camada ? todas.filter(([rid]) => rid === String(abrangencia.rid)) : [];
+    } else if (abrangencia.tipo === 'uf' && camada !== 'Biomas') {
+      const uf = abrangencia.uf;
+      sel = todas.filter(([, r]) => (r.chunk || primeiraUf(r.uf)) === uf);
+    } else {
+      sel = todas;
+    }
+    return sel.sort(porNome);
+  }
+
+  // grupos: [{ camada, rotulo, feicoes: [[rid, reg], ...] }]; campos: ids do catalogo
+  function montarTabela(grupos, campos) {
+    const escolhidos = CAMPOS.filter(c => campos.includes(c.id));
+    const colunas = ID_COLUNAS.concat(escolhidos.map(c => c.coluna));
+    const linhas = [];
+    for (const g of grupos) {
+      for (const [rid, r] of g.feicoes) {
+        const ufc = g.camada === 'Biomas' ? '' : (g.camada === 'UCs' ? (r.chunk || '') : primeiraUf(r.uf));
+        const linha = [g.rotulo, String(rid), r.cod === undefined ? '' : String(r.cod), r.nome, ufc];
+        for (const c of escolhidos) {
+          const v = r[c.id];
+          linha.push(v === null || v === undefined || !Number.isFinite(v)
+            ? null : (c.fator === 1 ? v : Math.round(v * c.fator * 1e6) / 1e6));
+        }
+        linhas.push(linha);
+      }
+    }
+    return { colunas, linhas };
+  }
+
+  FEFDownload.ID_COLUNAS = ID_COLUNAS;
+  FEFDownload.filtrarFeicoes = filtrarFeicoes;
+  FEFDownload.montarTabela = montarTabela;
 })();
