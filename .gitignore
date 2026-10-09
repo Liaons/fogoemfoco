@@ -11,3 +11,6 @@ proposta_v2.html
 # Rascunhos e pacotes de teste
 _*
 *.tgz
+
+# Configuracao local do Claude Code (servidor de teste, worktrees): nao faz parte do site
+.claude/
