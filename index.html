@@ -255,7 +255,7 @@ a{color:inherit;text-decoration:none}
 </header>
 
 <section class="hero">
-  <video class="hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true"
+  <video class="hero-video" autoplay muted loop playsinline webkit-playsinline preload="auto" aria-hidden="true"
          poster="img/hero_fire_poster.jpg" src="assets/hero_fire.mp4"></video>
   <div class="env">
     <div class="selo"><span class="ponto"></span>março/2025 a fevereiro/2026</div>
@@ -460,24 +460,34 @@ const contador = new IntersectionObserver((entradas) => {
 }, { threshold: .5 });
 document.querySelectorAll('.num').forEach(el => contador.observe(el));
 
-// video do hero: aparece quando comeca a tocar e pausa quando sai da tela. Com movimento
-// reduzido ou economia de dados fica so o quadro parado.
+// video do hero: aparece quando comeca a tocar e pausa quando sai da tela. Com
+// "reduzir movimento" ligado fica so o quadro parado. Quando o celular bloqueia a
+// reproducao automatica (modo de economia de energia no iPhone, por exemplo), o video
+// comeca no primeiro toque ou rolagem.
 const video = document.querySelector('.hero-video');
 if (video) {
-  const parado = matchMedia('(prefers-reduced-motion: reduce)').matches ||
-                 (navigator.connection && navigator.connection.saveData);
-  if (parado) {
+  video.muted = true;            // alguns navegadores so contam o atributo, outros a propriedade
+  video.playsInline = true;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     video.removeAttribute('autoplay');
-    video.preload = 'none';
     video.pause();
     video.classList.add('pronto');
   } else {
     const mostrar = () => video.classList.add('pronto');
+    let visivel = true;
+    const tocar = () => { if (visivel) video.play().catch(mostrar); };   // bloqueado: fica o poster
     if (video.readyState >= 3 && !video.paused) mostrar();
-    video.addEventListener('playing', mostrar, { once: true });
-    video.play().catch(mostrar);   // autoplay bloqueado: fica o poster, sem tela vazia
+    video.addEventListener('playing', mostrar);
+    tocar();
+    // segunda chance no primeiro gesto, quando o navegador recusou o autoplay
+    const gesto = () => { if (video.paused) tocar(); };
+    ['touchstart', 'pointerdown', 'scroll', 'keydown'].forEach(ev =>
+      addEventListener(ev, gesto, { once: true, passive: true }));
+    // ao voltar para a aba ou para o topo, retoma
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) tocar(); });
     new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) video.play().catch(() => {}); else video.pause();
+      visivel = e.isIntersecting;
+      if (visivel) tocar(); else video.pause();
     }).observe(video);
   }
 }
