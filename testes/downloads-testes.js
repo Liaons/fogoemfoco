@@ -147,3 +147,26 @@ teste('series eventos: 12 meses de 2025 por tipo', () => {
 teste('series: area sem serie fica fora', () => {
   igual(D.seriesLongas('gfa', 'Estados', FEIC, {}).linhas.length, 0);
 });
+
+teste('crc32 do vetor de referencia "123456789" = cbf43926', () => {
+  igual(D.crc32(new TextEncoder().encode('123456789')).toString(16), 'cbf43926');
+});
+
+teste('zip: assinaturas, contagem e conteudo legivel', () => {
+  const z = D.zipar([{ nome: 'a.csv', texto: 'x,y\r\n1,2\r\n' }, { nome: 'dicionário.csv', texto: 'ç' }], new Date(2026, 9, 9));
+  const v = new DataView(z.buffer);
+  igual(v.getUint32(0, true).toString(16), '4034b50', 'cabecalho local');
+  const fim = z.length - 22;
+  igual(v.getUint32(fim, true).toString(16), '6054b50', 'registro final');
+  igual(v.getUint16(fim + 10, true), 2, 'dois arquivos');
+  const nome = new TextDecoder().decode(z.slice(30, 30 + v.getUint16(26, true)));
+  igual(nome, 'a.csv');
+  const dados = new TextDecoder().decode(z.slice(30 + 5, 30 + 5 + v.getUint32(18, true)));
+  igual(dados, 'x,y\r\n1,2\r\n');
+});
+
+teste('zip: BOM opcional no inicio do texto', () => {
+  const z = D.zipar([{ nome: 'a.csv', texto: 'x', bom: true }], new Date(2026, 9, 9));
+  const v = new DataView(z.buffer);
+  igual(v.getUint32(18, true), 4, 'BOM (3 bytes) + x');
+});
