@@ -7,7 +7,7 @@ histórica de cada território desde 2002.
 
 Rede BRASA de Pesquisa e Instituto Nacional de Pesquisas Espaciais (INPE).
 
-**No ar:** <https://liaons.github.io/fogoemfoco/>
+**No ar:** <https://fogoemfoco.org>
 
 São duas páginas estáticas, sem build e sem framework, publicadas pelo GitHub Pages:
 
