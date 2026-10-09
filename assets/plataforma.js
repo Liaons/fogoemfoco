@@ -264,16 +264,19 @@ function posicao(v, def, faixa) {
   return def.raiz ? Math.sqrt(Math.max(0, t)) : t;
 }
 
-function corDe(reg) {
-  const def = defAtual();
+function corPara(reg, def, faixa) {
   const vazio = semDado(reg, def);
   if (vazio) return css(vazio[0]);
   const v = reg[def.id];
   if (def.escala === 'ranque') return corRanque(v);
   if (def.escala === 'anomalia') return corAnomalia(v);
   if (def.escala === 'mes') return corMes(v);
-  return estado.faixa ? interpolar(PALETAS[def.paleta], posicao(v * (def.fator || 1), def, estado.faixa))
-                      : PALETAS[def.paleta][0];
+  return faixa ? interpolar(PALETAS[def.paleta], posicao(v * (def.fator || 1), def, faixa))
+               : PALETAS[def.paleta][0];
+}
+
+function corDe(reg) {
+  return corPara(reg, defAtual(), estado.faixa);
 }
 
 function ehTopo(reg) {
@@ -313,31 +316,31 @@ function visiveis() {
   return fora;
 }
 
-function calcularFaixa() {
-  const def = defAtual();
-  if (def.escala !== 'continua' && def.escala !== 'diferenca') { estado.faixa = null; return; }
+// Faixa da escala continua para um conjunto de feicoes (o mapa usa as visiveis; a ficha,
+// os municipios do estado ou a regiao em volta da area).
+function faixaDe(regs, def) {
+  if (def.escala !== 'continua' && def.escala !== 'diferenca') return null;
   const f = def.fator || 1;
-  const vals = Object.values(visiveis())
+  const vals = regs
     .filter(r => !semDado(r, def))
     .map(r => r[def.id] * f)
     .filter(v => Number.isFinite(v))
     .sort((a, b) => a - b);
-  if (!vals.length) { estado.faixa = null; return; }
+  if (!vals.length) return null;
   if (def.escala === 'diferenca') {
     // simetrica em torno do zero, pelo maior afastamento
     const m = Math.max(Math.abs(vals[0]), Math.abs(vals[vals.length - 1])) || 1;
-    estado.faixa = [-m, m];
-  } else if (def.de1) {
-    // contagens (focos, eventos): de 1 ao maximo, como no relatorio
-    estado.faixa = [1, Math.max(2, vals[vals.length - 1])];
-  } else if (def.paleta === 'TEMP' || def.paleta === 'DUR') {
-    estado.faixa = def.paleta === 'DUR'
-      ? [1, Math.max(2, vals[Math.floor(vals.length * 0.99)])]
-      : [vals[0], vals[vals.length - 1]];
-  } else {
-    // percentil 98 no topo: sem isso um unico municipio enorme achata todo o resto
-    estado.faixa = [0, vals[Math.floor(vals.length * 0.98)] || vals[vals.length - 1]];
+    return [-m, m];
   }
+  if (def.de1) return [1, Math.max(2, vals[vals.length - 1])];   // contagens: de 1 ao maximo
+  if (def.paleta === 'DUR') return [1, Math.max(2, vals[Math.floor(vals.length * 0.99)])];
+  if (def.paleta === 'TEMP') return [vals[0], vals[vals.length - 1]];
+  // percentil 98 no topo: sem isso um unico municipio enorme achata todo o resto
+  return [0, vals[Math.floor(vals.length * 0.98)] || vals[vals.length - 1]];
+}
+
+function calcularFaixa() {
+  estado.faixa = faixaDe(Object.values(visiveis()), defAtual());
 }
 
 /* ---------- mapa ---------- */
@@ -644,7 +647,7 @@ function ligarGfa() {
   });
 }
 
-function grafGfa(s, reg) {
+function grafGfa(s, reg, alvo) {
   const m = METRICAS_GFA.find(x => x.id === estado.gfaMetrica);
   const vals = s[m.id] || [];
   const ultimo = s.ano.length - 1;
@@ -667,7 +670,7 @@ function grafGfa(s, reg) {
       { type: 'line', data: Array(n).fill(media), borderColor: css('--suave'), borderWidth: 1, borderDash: [4, 3], pointRadius: 0, order: 1 },
     );
   }
-  estado.graficos.push(new Chart($('#g-gfa'), {
+  const g = new Chart(alvo || $('#g-gfa'), {
     data: { labels: s.ano.map(a => `${a}-${String(a + 1).slice(2)}`), datasets },
     options: {
       ...base,
@@ -689,7 +692,9 @@ function grafGfa(s, reg) {
         } },
       },
     },
-  }));
+  });
+  if (!alvo) estado.graficos.push(g);
+  return g;
 }
 
 // Eventos de fogo do INPE: numeros do ano e o grafico de barras empilhadas por mes de
@@ -723,10 +728,10 @@ function blocoEventos(reg, s) {
     </div>`;
 }
 
-function grafEventos(s) {
+function grafEventos(s, alvo) {
   const base = baseGraf();
   const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-  estado.graficos.push(new Chart($('#g-eventos'), {
+  const g = new Chart(alvo || $('#g-eventos'), {
     type: 'bar',
     data: {
       labels: meses,
@@ -750,7 +755,9 @@ function grafEventos(s) {
         } },
       },
     },
-  }));
+  });
+  if (!alvo) estado.graficos.push(g);
+  return g;
 }
 
 // Referencia da serie de clima da camada aberta. Cada camada guarda a sua em meta.json:
@@ -813,7 +820,7 @@ const rotulosBarras = {
   },
 };
 
-function grafDif(s, temp) {
+function grafDif(s, temp, alvo) {
   const base = baseGraf();
   const atual = temp ? s.t : s.p, media = temp ? s.t_media : s.p_media;
   const dif = (atual || []).map((v, i) => (v === null || media[i] === null) ? null : v - media[i]);
@@ -824,7 +831,7 @@ function grafDif(s, temp) {
   const vs = dif.filter(v => v !== null);
   const ext = Math.max(...vs.map(Math.abs), temp ? 0.1 : 1);
   const folga = ext * (temp ? 0.5 : 0.3);
-  estado.graficos.push(new Chart($(temp ? '#g-temp-dif' : '#g-chuva-dif'), {
+  const g = new Chart(alvo || $(temp ? '#g-temp-dif' : '#g-chuva-dif'), {
     type: 'bar',
     plugins: [rotulosBarras],
     data: {
@@ -855,13 +862,15 @@ function grafDif(s, temp) {
         } },
       },
     },
-  }));
+  });
+  if (!alvo) estado.graficos.push(g);
+  return g;
 }
 
-function grafClima(s, temp) {
+function grafClima(s, temp, alvo) {
   const base = baseGraf();
   const unidade = temp ? ' °C' : ' mm';
-  estado.graficos.push(new Chart($(temp ? '#g-temp' : '#g-chuva'), {
+  const g = new Chart(alvo || $(temp ? '#g-temp' : '#g-chuva'), {
     type: 'line',
     data: {
       labels: MESES,
@@ -890,7 +899,9 @@ function grafClima(s, temp) {
         } },
       },
     },
-  }));
+  });
+  if (!alvo) estado.graficos.push(g);
+  return g;
 }
 
 /* ---------- filtro e busca ---------- */
@@ -1025,8 +1036,8 @@ function montarVariaveis() {
   });
 }
 
-function montarLegenda() {
-  const def = defAtual();
+// HTML da legenda de uma variavel, para o mapa e para a ficha.
+function legendaHTML(def, faixaAtual, regs) {
   // Escalas classificadas em blocos encostados, com o rotulo de cada classe embaixo;
   // escalas continuas num degrade com as pontas. A esquerda fica o menor valor, como
   // nas figuras do relatorio; no ranque, o 1o lugar.
@@ -1049,8 +1060,8 @@ function montarLegenda() {
     titulo = 'Mês de pico (mar/25 – fev/26)';
     faixa = blocos(MESES_COR);
     baixo = marcas(MESES.map(m => m[0].toUpperCase()));
-  } else if (estado.faixa) {
-    const [lo, hi] = estado.faixa;
+  } else if (faixaAtual) {
+    const [lo, hi] = faixaAtual;
     const casas = def.casas === undefined ? 1 : def.casas;
     const fmt = (v) => nf(v, Math.abs(v) >= 100 ? 0 : casas);
     faixa = `linear-gradient(90deg,${PALETAS[def.paleta].join(',')})`;
@@ -1061,17 +1072,19 @@ function montarLegenda() {
   }
 
   // o que fica sem cor, conforme a fonte do dado
-  const regs = Object.values(visiveis());
   const vazios = new Map();
   regs.forEach(r => { const v = semDado(r, def); if (v) vazios.set(v[1], v[0]); });
   const linhas = [...vazios].map(([rot, tok]) =>
     `<span class="linha"><i style="background:${css(tok)}"></i>${rot}</span>`).join('');
-
-  $('#legenda-corpo').innerHTML = `
+  return `
     <span class="titulo-leg">${titulo}</span>
     ${faixa ? `<span class="faixa" style="background:${faixa}"></span>` : ''}
     ${baixo}
     ${linhas}`;
+}
+
+function montarLegenda() {
+  $('#legenda-corpo').innerHTML = legendaHTML(defAtual(), estado.faixa, Object.values(visiveis()));
 
   const pc = $('#painel-camadas');
   try {
