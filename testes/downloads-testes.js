@@ -188,3 +188,25 @@ teste('tamanho legivel', () => {
   igual(D.tamanhoLegivel(42 * 1024), '42 KB');
   igual(D.tamanhoLegivel(3.4 * 1024 * 1024), '3,4 MB');
 });
+
+const QUAD = (rid, x0, y0, x1, y1) => ({ type: 'Feature', properties: { rid },
+  geometry: { type: 'Polygon', coordinates: [[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]] } });
+
+teste('caixa: limites de um conjunto de feicoes', () => {
+  igual(D.caixa([QUAD('a', -50, -10, -49, -9), QUAD('b', -48, -12, -47, -11)]), [-50, -12, -47, -9]);
+});
+
+teste('svg do mapa: um path por feicao, destaque com contorno grosso, dentro da caixa', () => {
+  const svg = D.mapaSVG([QUAD('a', -50, -10, -49, -9), QUAD('b', -48, -12, -47, -11)],
+    { cor: (rid) => rid === 'a' ? '#ff0000' : '#00ff00', destaque: 'a', largura: 300, altura: 200 });
+  igual((svg.match(/<path /g) || []).length, 3, 'duas feicoes + contorno do destaque');
+  verdadeiro(svg.includes('fill="#ff0000"'));
+  verdadeiro(/stroke-width="2/.test(svg), 'contorno grosso do destaque');
+  const nums = [...svg.matchAll(/[ML]([\d.]+),([\d.]+)/g)].map(m => [+m[1], +m[2]]);
+  verdadeiro(nums.every(([x, y]) => x >= 0 && x <= 300 && y >= 0 && y <= 200), 'pontos dentro do quadro');
+});
+
+teste('svg do mapa: caixa forcada recorta o enquadramento', () => {
+  const svg = D.mapaSVG([QUAD('a', -50, -10, -49, -9)], { cor: () => '#000', largura: 100, altura: 100, limites: [-60, -20, -40, 0] });
+  verdadeiro(svg.includes('viewBox="0 0 100 100"'));
+});

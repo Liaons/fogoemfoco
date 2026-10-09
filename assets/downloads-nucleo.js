@@ -328,4 +328,47 @@
   FEFDownload.nomeBase = nomeBase;
   FEFDownload.previa = previa;
   FEFDownload.tamanhoLegivel = tamanhoLegivel;
+  function aneis(geom) {
+    if (!geom) return [];
+    if (geom.type === 'Polygon') return geom.coordinates;
+    if (geom.type === 'MultiPolygon') return geom.coordinates.flat();
+    return [];
+  }
+
+  function caixa(features) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const f of features) for (const anel of aneis(f.geometry)) for (const [x, y] of anel) {
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    return [x0, y0, x1, y1];
+  }
+
+  // features: GeoJSON; op: { cor(rid) -> cor, destaque?: rid, largura, altura, limites?, linha?, fundo? }
+  function mapaSVG(features, op) {
+    const [x0, y0, x1, y1] = op.limites || caixa(features);
+    const k = Math.cos(((y0 + y1) / 2) * Math.PI / 180);
+    const larg = (x1 - x0) * k || 1, alt = (y1 - y0) || 1;
+    const margem = 4;
+    const esc = Math.min((op.largura - 2 * margem) / larg, (op.altura - 2 * margem) / alt);
+    const dx = (op.largura - larg * esc) / 2, dy = (op.altura - alt * esc) / 2;
+    const px = (x, y) => (dx + (x - x0) * k * esc).toFixed(1) + ',' + (dy + (y1 - y) * esc).toFixed(1);
+    const caminho = (f) => aneis(f.geometry).map(a => 'M' + a.map(([x, y]) => px(x, y)).join('L') + 'Z').join('');
+    const linha = op.linha || '#ffffff';
+    let corpo = '';
+    let contorno = '';
+    for (const f of features) {
+      const rid = String(f.properties.rid);
+      corpo += `<path d="${caminho(f)}" fill="${op.cor(rid)}" stroke="${linha}" stroke-width="0.4"/>`;
+      if (op.destaque !== undefined && rid === String(op.destaque)) {
+        contorno = `<path d="${caminho(f)}" fill="none" stroke="#0a0c1c" stroke-width="2"/>`;
+      }
+    }
+    const fundo = op.fundo ? `<rect width="${op.largura}" height="${op.altura}" fill="${op.fundo}"/>` : '';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${op.largura} ${op.altura}" width="100%">` +
+      `<clipPath id="quadro"><rect width="${op.largura}" height="${op.altura}"/></clipPath>` +
+      `<g clip-path="url(#quadro)">${fundo}${corpo}${contorno}</g></svg>`;
+  }
+
+  FEFDownload.caixa = caixa;
+  FEFDownload.mapaSVG = mapaSVG;
 })();
