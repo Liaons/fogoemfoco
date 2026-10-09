@@ -21,7 +21,7 @@ const DADOS = 'dados/';
 // Carimbo do conteudo de dados/, reescrito por 11_versionar_assets.py. Os JSONs e os
 // TopoJSONs sao buscados com fetch e o navegador os guarda em cache como qualquer outro
 // arquivo: sem este carimbo, trocar uma camada nao chega a quem ja visitou a pagina.
-const VERSAO_DADOS = 'f8b551d0';
+const VERSAO_DADOS = '68dbc253';
 
 const CAMADAS = [
   { id: 'UF',              rotulo: 'Estados',                 geo: 'uf.json',             tipo: 'geojson',  filtravel: false },
@@ -103,8 +103,16 @@ const VARIAVEIS = [
     de1: true, unidade: '', casas: 0, destaque: 'focos de calor<br>no período' },
   { id: 'eventos',      grupo: 'eventos', fonte: 'eventos', rotulo: 'Número de eventos',        escala: 'continua', paleta: 'FOCOS', raiz: true,
     de1: true, unidade: '', casas: 0, destaque: `eventos de fogo<br>em 2025` },
+  // ranques espaciais: a posicao entre todas as areas da camada em 2025 (1 = mais), e nao
+  // na serie historica como os outros ranques; por isso tem escala propria ("posicao")
+  { id: 'ev_ranque',    grupo: 'eventos', fonte: 'frentes', rotulo: 'Ranque espacial dos eventos', escala: 'posicao', paleta: 'FOCOS',
+    unidade: '', casas: 0, conta: 'eventos', destaque: 'em eventos de fogo<br>entre as áreas do país' },
   { id: 'ev_dur_media', grupo: 'eventos', fonte: 'eventos', rotulo: 'Duração média dos eventos', escala: 'continua', paleta: 'DUR',
     unidade: ' dias', casas: 1, destaque: 'duração média dos eventos,<br>sem os extremos' },
+  { id: 'ev_frentes',   grupo: 'eventos', fonte: 'frentes', rotulo: 'Frentes de fogo',          escala: 'continua', paleta: 'FOCOS', raiz: true,
+    de1: true, unidade: '', casas: 0, destaque: `frentes de fogo<br>em 2025` },
+  { id: 'ev_frentes_ranque', grupo: 'eventos', fonte: 'frentes', rotulo: 'Ranque espacial das frentes', escala: 'posicao', paleta: 'FOCOS',
+    unidade: '', casas: 0, conta: 'frentes de fogo', destaque: 'em frentes de fogo<br>entre as áreas do país' },
 ];
 
 function defAtual() {
@@ -116,6 +124,7 @@ function defAtual() {
 //   gfa      sem incendio no periodo
 //   focos    sem foco no periodo (a tabela so lista quem teve foco; zero tambem conta)
 //   eventos  sem evento; na duracao, menos de 5 eventos
+//   frentes  sem evento; com evento e sem linha na tabela de 2025 (frentes e ranques espaciais), sem dado
 //   clima    sem serie climatica atualizada (municipios, ate chegar o arquivo completo)
 function semDado(reg, def) {
   const v = reg ? reg[def.id] : null;
@@ -126,6 +135,9 @@ function semDado(reg, def) {
     case 'eventos':
       if (!reg || !reg.eventos) return ['--fora', 'sem evento de fogo'];
       return vazio ? ['--sem-fogo', 'menos de 5 eventos'] : null;
+    case 'frentes':
+      if (!reg || !reg.eventos) return ['--fora', 'sem evento de fogo'];
+      return vazio ? ['--sem-analise', 'fora da tabela de eventos de 2025'] : null;
     case 'gfa':
       return (!reg || !reg.n_incendios || vazio) ? ['--sem-fogo', 'sem incêndio no período'] : null;
     case 'clima':
@@ -260,6 +272,7 @@ function posicao(v, def, faixa) {
   const [lo, hi] = faixa;
   if (def.escala === 'diferenca') return hi > 0 ? (v + hi) / (2 * hi) : 0.5;
   if (hi <= lo) return 0;
+  if (def.escala === 'posicao') return 1 - (v - lo) / (hi - lo);   // 1o lugar no tom mais forte
   const t = (v - lo) / (hi - lo);
   return def.raiz ? Math.sqrt(Math.max(0, t)) : t;
 }
@@ -324,7 +337,7 @@ function visiveis() {
 // Faixa da escala continua para um conjunto de feicoes (o mapa usa as visiveis; a ficha,
 // os municipios do estado ou a regiao em volta da area).
 function faixaDe(regs, def) {
-  if (def.escala !== 'continua' && def.escala !== 'diferenca') return null;
+  if (def.escala !== 'continua' && def.escala !== 'diferenca' && def.escala !== 'posicao') return null;
   const f = def.fator || 1;
   const vals = regs
     .filter(r => !semDado(r, def))
@@ -337,7 +350,7 @@ function faixaDe(regs, def) {
     const m = Math.max(Math.abs(vals[0]), Math.abs(vals[vals.length - 1])) || 1;
     return [-m, m];
   }
-  if (def.de1) return [1, Math.max(2, vals[vals.length - 1])];   // contagens: de 1 ao maximo
+  if (def.de1 || def.escala === 'posicao') return [1, Math.max(2, vals[vals.length - 1])];   // contagens e posicoes: de 1 ao maximo
   if (def.paleta === 'DUR') return [1, Math.max(2, vals[Math.floor(vals.length * 0.99)])];
   if (def.paleta === 'TEMP') return [vals[0], vals[vals.length - 1]];
   // percentil 98 no topo: sem isso um unico municipio enorme achata todo o resto
@@ -393,7 +406,7 @@ function desenhar(ajustarZoom) {
 
 function valorTexto(reg, def) {
   const v = reg[def.id];
-  if (def.escala === 'ranque') return v + 'º';
+  if (def.escala === 'ranque' || def.escala === 'posicao') return v + 'º';
   if (def.escala === 'mes') return MESES[(v + 9) % 12];
   const casas = def.casas === undefined ? 1 : def.casas;
   const bruto = v * (def.fator || 1);
@@ -527,6 +540,8 @@ function render(reg, sgfa, sclima, seventos) {
         ${reg.estado_dado === 'ok' && reg.mes_pico ? `<div class="largo"><b><i class="amostra" style="background:${
           corMes(reg.mes_pico)}"></i>${MESES_EXTENSO[reg.mes_pico - 1]}</b><small>mês do pico da anomalia de área queimada</small></div>` : ''}
       </div>
+      <p class="nota">Toda a área queimada aqui se restringe a áreas com pelo menos 30% de cobertura
+      de vegetação.</p>
     </div>
     <div class="bloco" id="bloco-gfa">${blocoGfa(reg)}</div>
     ${reg.focos_ranque !== undefined ? `
@@ -554,10 +569,7 @@ function render(reg, sgfa, sclima, seventos) {
       <div class="grafico"><canvas id="g-chuva"></canvas></div>
       <div class="grafico grafico-dif"><canvas id="g-chuva-dif"></canvas></div>
     </div>
-    <div class="bloco">
-      <p class="nota">Toda a área queimada aqui se refere a vegetação com pelo menos
-      30% de cobertura arbórea. Não é a área queimada total.</p>
-    </div>`;
+    `;
 
   estado.sgfa = sgfa;
   estado.regAberto = reg;
@@ -720,16 +732,24 @@ function blocoEventos(reg, s) {
     <div class="bloco">
       <h2>Eventos de fogo · ${ev.ano || 2025}</h2>
       <div class="numeros-sel">
-        <div><b>${nf(reg.eventos)}</b><small>eventos no ano</small></div>
-        <div><b>${reg.ev_dur_media === null || reg.ev_dur_media === undefined ? '—' : nf(reg.ev_dur_media, 1)}</b>
-             <small>dias, duração média sem os extremos</small></div>
+        <div><b>${nf(reg.eventos)}</b><small>número de eventos</small></div>
+        <div><b>${reg.ev_ranque ? reg.ev_ranque + 'º' : '—'}</b>
+             <small>ranque espacial de eventos para ${ev.ano || 2025}</small></div>
+        <div><b>${nf(reg.ev_frentes)}</b><small>número de frentes</small></div>
+        <div><b>${reg.ev_frentes_ranque ? reg.ev_frentes_ranque + 'º' : '—'}</b>
+             <small>ranque espacial de frentes para ${ev.ano || 2025}</small></div>
+        <div class="largo"><b>${reg.ev_dur_media === null || reg.ev_dur_media === undefined ? '—' : nf(reg.ev_dur_media, 1) + ' dias'}</b>
+             <small>duração média dos eventos, sem os extremos</small></div>
       </div>
       ${s ? `<div class="grafico grafico-eventos"><canvas id="g-eventos"></canvas></div>
       <p class="chaves chaves-eventos">${TIPOS_EVENTO.map(([, rot, cor]) =>
         `<span><i class="bloco-cor" style="background:${cor}"></i>${rot}</span>`).join('')}</p>` : ''}
-      <p class="nota">Eventos por mês de início, atribuídos pelo centroide. A duração média deixa de fora
-      os eventos acima de ${nf(ev.corte_dias || 15)} dias (percentil 99 do país) e fica sem valor com menos
-      de ${ev.min_eventos || 5} eventos.</p>
+      <p class="nota">Os ranques de eventos são espaciais: a posição da área entre todas as da mesma camada
+      no país em ${ev.ano || 2025} (1º = mais eventos ou frentes). Não comparam com anos anteriores, como os
+      ranques da série histórica no topo do painel.</p>
+      <p class="nota">A duração dos eventos é atribuída a partir da data estimada de início e fim. A duração
+      média é calculada até o percentil ${nf(99)} (${nf(ev.corte_dias || 15)} dias) e fica sem valor com menos de
+      ${ev.min_eventos || 5} eventos.</p>
     </div>`;
 }
 
@@ -1065,6 +1085,11 @@ function legendaHTML(def, faixaAtual, regs) {
     titulo = 'Mês de pico (mar/25 – fev/26)';
     faixa = blocos(MESES_COR);
     baixo = marcas(MESES.map(m => m[0].toUpperCase()));
+  } else if (def.escala === 'posicao' && faixaAtual) {
+    // a esquerda o 1o lugar, como nos ranques
+    titulo = `1º – mais ${def.conta} em 2025`;
+    faixa = `linear-gradient(90deg,${PALETAS[def.paleta].slice().reverse().join(',')})`;
+    baixo = `<span class="pontas"><span>1º</span><span>${nf(faixaAtual[1])}º</span></span>`;
   } else if (faixaAtual) {
     const [lo, hi] = faixaAtual;
     const casas = def.casas === undefined ? 1 : def.casas;
@@ -1115,7 +1140,7 @@ function limparPainel() {
 
 // Variaveis em que a soma das feicoes faz sentido (contagens e areas). Nas outras o
 // resumo mostra a media ou nada: somar ranque, taxa ou temperatura nao diz nada.
-const SOMAVEIS = new Set(['aq', 'n_incendios', 'focos', 'eventos']);
+const SOMAVEIS = new Set(['aq', 'n_incendios', 'focos', 'eventos', 'ev_frentes']);
 
 // Painel direito antes do clique: um resumo da camada aberta (ou do estado filtrado)
 // na variavel do mapa. Numeros gerais, os cinco primeiros e, nas escalas de valor, os
@@ -1156,6 +1181,15 @@ function resumoCamada() {
       Clique numa área para ver o mês de pico dela.</p>`;
     lista = top.map(([m, n]) => `<div class="achado"><span><i class="amostra" style="background:${corMes(+m)}"></i>${
       MESES[(+m + 9) % 12]}</span><b>${nf(n)} (${nf(n / com.length * 100, 0)}%)</b></div>`).join('');
+  } else if (def.escala === 'posicao') {
+    const ord = com.slice().sort(([, a], [, b]) => a[def.id] - b[def.id] || a.nome.localeCompare(b.nome, 'pt-BR'));
+    titulo1 = `Mais ${def.conta} no país`;
+    lista = ord.slice(0, 5).map(linha).join('');
+    extra = `<p class="nota">Ranque espacial: a posição de cada área entre todas as áreas desta camada no país, em
+      número de ${def.conta} em 2025 (1º = mais ${def.conta}). Não compara com anos anteriores, como os outros ranques.</p>`;
+    if (ord.length > 5) {
+      extra += `<h2>Menos ${def.conta} (com evento)</h2><div class="lista-resumo">${ord.slice(-5).reverse().map(linha).join('')}</div>`;
+    }
   } else {
     const ord = com.slice().sort(([, a], [, b]) => b[def.id] - a[def.id]);
     const vals = ord.map(([, r]) => r[def.id] * f);

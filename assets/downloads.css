@@ -54,3 +54,9 @@
 .rodape-dl button[disabled] { opacity: .55; cursor: progress; }
 .aviso-dl { padding: 18px 0; color: var(--suave); font-size: 14px; line-height: 1.55; }
 @media (max-width: 560px) { .blocos-dl { grid-template-columns: 1fr; } }
+.abrang-dl.col { flex-direction: column; align-items: stretch; gap: 6px; }
+.abrang-dl small { color: var(--suave); font-size: 12px; }
+.busca-ficha { padding-left: 22px; }
+.busca-ficha input { width: 100%; font: inherit; font-size: 13.5px; padding: 6px 9px; border-radius: 7px;
+  border: 1px solid var(--borda); background: var(--superficie-2); color: var(--texto); }
+#var-ficha { max-width: 100%; }

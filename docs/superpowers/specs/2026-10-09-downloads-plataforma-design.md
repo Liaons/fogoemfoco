@@ -47,7 +47,7 @@ Sempre um `.zip` (o navegador não baixa dois arquivos num clique só):
 
 Formato: **padrão internacional** — separador vírgula, ponto decimal, UTF-8 com BOM (para o Excel reconhecer os acentos), aspas só onde preciso.
 
-Como citar (no LEIA e na ficha): *Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026. Rede Brasa de Pesquisa. – São José dos Campos: INPE, 2025.*
+Como citar (no LEIA e na ficha): *Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026. Rede Brasa de Pesquisa. – São José dos Campos: INPE, 2026.*
 
 ## Aba "Ficha da área (PDF)"
 

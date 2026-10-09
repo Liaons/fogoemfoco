@@ -10,7 +10,7 @@
 
   function abrir() {
     janela.hidden = false;
-    esc = null; seqPrevia++;
+    esc = null; fic = null; seqPrevia++;
     trocarAba(aba);
     document.getElementById('fechar-download').focus();
   }
@@ -243,27 +243,87 @@
 
   /* ---------- aba da ficha ---------- */
 
-  function htmlFicha() {
+  // escolhas da aba da ficha: a area (a aberta no painel ou uma achada na busca) e a
+  // variavel do mapa; preenchidas a cada abertura a partir da tela
+  let fic = null;
+
+  function fichaInicial() {
     const rid = estado.selecionado;
     const reg = rid ? (estado.atributos[estado.camada] || {})[rid] : null;
-    if (!reg) {
-      return `<p class="aviso-dl">Escolha uma área no mapa ou na busca para gerar a ficha. Ela sai com a
-        variável que estiver no mapa.</p>`;
-    }
-    const def = defAtual();
-    return `<p class="aviso-dl">Ficha de <b>${escHtml(reg.nome)}</b>, em uma página A4, com o mapa em
-      <b>${escHtml(def.rotulo.toLowerCase())}</b>. Abre a janela de impressão: escolha <b>Salvar como PDF</b>.</p>
-      <div class="rodape-dl"><span id="previa-dl">Uma página A4</span>
+    const aberta = reg ? { camada: estado.camada, rid: String(rid), nome: reg.nome } : null;
+    return { aberta, outra: null, modo: aberta ? 'aberta' : 'outra', variavel: estado.variavel };
+  }
+
+  const areaDaFicha = () => fic.modo === 'aberta' ? fic.aberta : fic.outra;
+
+  function htmlFicha() {
+    fic = fic || fichaInicial();
+    const radio = (v, rot, des = false) => `<label><input type="radio" name="area-ficha" value="${v}"${
+      fic.modo === v ? ' checked' : ''}${des ? ' disabled' : ''}>${rot}</label>`;
+    const nomeArea = (a) => `<b>${escHtml(a.nome)}</b> <small>${ROTULO_CURTO[a.camada]}</small>`;
+    const opcoes = GRUPOS.map(g => `<optgroup label="${escHtml(g.rotulo)}">${VARIAVEIS.filter(v => v.grupo === g.id)
+      .map(v => `<option value="${v.id}"${v.id === fic.variavel ? ' selected' : ''}>${escHtml(v.rotulo)}</option>`).join('')}</optgroup>`).join('');
+    return `
+      <div class="passo-dl"><h4>1 · Área</h4><div class="abrang-dl col">
+        ${radio('aberta', fic.aberta ? `A aberta no painel: ${nomeArea(fic.aberta)}` : 'A aberta no painel <small>(nenhuma aberta)</small>', !fic.aberta)}
+        ${radio('outra', fic.outra ? `Outra: ${nomeArea(fic.outra)}` : 'Outra área')}
+        <div class="busca-ficha"${fic.modo === 'outra' ? '' : ' hidden'}>
+          <input type="search" id="busca-ficha" placeholder="Buscar estado, município, bioma, UC ou TI" autocomplete="off"
+            aria-label="Buscar área para a ficha">
+          <div id="achados-ficha" class="achados"></div></div></div></div>
+      <div class="passo-dl"><h4>2 · Variável do mapa <small>colore o mapa e destaca o ranque</small></h4>
+        <div class="abrang-dl"><select id="var-ficha" aria-label="Variável do mapa da ficha">${opcoes}</select></div></div>
+      <div class="rodape-dl"><span id="previa-dl" aria-live="polite"></span>
         <button type="button" id="gerar-ficha">Gerar ficha</button></div>`;
+  }
+
+  function previaFicha() {
+    const a = areaDaFicha();
+    const def = VARIAVEIS.find(v => v.id === fic.variavel);
+    document.getElementById('previa-dl').innerHTML = a
+      ? `Uma página A4 · ${escHtml(a.nome)} · ${escHtml(def.rotulo.toLowerCase())}. Abre a impressão: escolha <b>Salvar como PDF</b>.`
+      : 'Escolha uma área.';
+    document.getElementById('gerar-ficha').disabled = !a;
   }
 
   function ligarFicha() {
     const b = document.getElementById('gerar-ficha');
-    if (!b) return;
+    const busca = document.getElementById('busca-ficha');
+    const achados = document.getElementById('achados-ficha');
+    previaFicha();
+    conteudo.querySelectorAll('input[name="area-ficha"]').forEach(r => r.onchange = () => {
+      fic.modo = r.value;
+      trocarAba('ficha');
+      document.querySelector(fic.modo === 'outra' ? '#busca-ficha' : 'input[name="area-ficha"]:checked').focus();
+    });
+    document.getElementById('var-ficha').onchange = (e) => { fic.variavel = e.target.value; previaFicha(); };
+    // a mesma busca da plataforma (todas as camadas, indice leve), sem mexer no mapa
+    let seq = 0;
+    busca.oninput = async () => {
+      const termo = chave(busca.value.trim()), n = ++seq;
+      if (termo.length < 2) { achados.innerHTML = ''; return; }
+      const indice = await carregarIndice();
+      if (n !== seq) return;
+      const ativas = new Set(CAMADAS.map(c => c.id));
+      const lista = indice.filter(it => ativas.has(it.camada) && it.k.includes(termo))
+        .map(it => ({ ...it, ordem: it.k.startsWith(termo) ? 0 : 1 }))
+        .sort((x, y) => x.ordem - y.ordem || x.nome.localeCompare(y.nome, 'pt-BR'));
+      achados.innerHTML = lista.length ? lista.slice(0, 30).map((a, i) =>
+        `<button type="button" class="achado" data-i="${i}"><span>${escHtml(a.nome)}${a.uf && a.camada !== 'UF'
+          ? ` <small>${escHtml(a.uf)}</small>` : ''}</span><em class="etq-camada">${ROTULO_CURTO[a.camada]}</em></button>`).join('')
+        : '<p class="ajuda">Nenhum resultado.</p>';
+      achados.querySelectorAll('.achado').forEach(el => el.onclick = () => {
+        const a = lista[+el.dataset.i];
+        fic.outra = { camada: a.camada, rid: String(a.rid), nome: a.nome };
+        trocarAba('ficha');
+        document.getElementById('gerar-ficha').focus();
+      });
+    };
     b.onclick = async () => {
-      if (b.disabled) return;
+      const a = areaDaFicha();
+      if (b.disabled || !a) return;
       b.disabled = true;       // um clique duplo nao abre duas janelas
-      try { await gerarFicha(estado.selecionado); }
+      try { await gerarFicha({ ...a, variavel: fic.variavel }); }
       finally { b.disabled = false; }
     };
   }
@@ -431,16 +491,24 @@
   // HTML completo da ficha A4 da area rid na camada aberta, com a variavel do mapa. Tudo o
   // que carrega vem primeiro; o desenho (graficos, mapa, cores) sai de uma vez com o tema
   // claro forcado.
-  async function montarFicha(rid) {
-    const camada = estado.camada;
+  async function montarFicha(escolha) {
+    // aceita so o rid: a area aberta, com a variavel da tela
+    const { camada, rid, variavel } = typeof escolha === 'object' ? escolha
+      : { camada: estado.camada, rid: escolha, variavel: estado.variavel };
+    await garantirAtributos(camada);
     const reg = estado.atributos[camada][rid];
-    const def = defAtual();
+    if (!reg) throw new Error('área não encontrada');
+    const def = VARIAVEIS.find(v => v.id === variavel) || defAtual();
     const anoEv = (estado.meta.eventos || {}).ano || 2025;
     const sg = (await serie('gfa', camada, reg.chunk || null))[rid];
     const sc = (await serie('clima', camada, reg.chunk || null))[rid];
     const se = (await serie('eventos', camada, reg.chunk || null))[rid];
     const dadosMapa = await carregarMapaDaFicha(camada, rid);
-    const clima = climaDaCamada();
+    const cc = estado.meta.camadas[camada] || {};
+    const clima = { ref: cc.clima_referencia || estado.meta.clima_referencia, atualizado: cc.clima_atualizado !== false };
+    // a serie do GFA segue a variavel do mapa quando ela e do GFA, como no painel
+    const baseGfa = def.id.replace(/_ranque$/, '');
+    const gfaMetrica = METRICAS_GFA.some(x => x.id === baseGfa) ? baseGfa : estado.gfaMetrica;
     const avisoClima = camada === 'Biomas' ? 'Os biomas não têm série de clima.'
       : !sc ? 'Sem série de clima para esta área.'
       : !clima.atualizado ? `Série de clima da versão anterior (média ${clima.ref}): o arquivo mensal atualizado deste recorte ainda não chegou.`
@@ -454,8 +522,12 @@
       // celulas da grade de 3 x 2: { t: titulo, img | nota, abaixo? }. Os graficos com chave
       // embaixo sao mais baixos, para a celula ficar com a altura das outras.
       const graf = [];
-      const m = METRICAS_GFA.find(x => x.id === estado.gfaMetrica);
-      graf.push(sg ? { t: 'Métricas de fogo · ' + m.titulo, img: png(cv => grafGfa(sg, reg, cv)) }
+      const m = METRICAS_GFA.find(x => x.id === gfaMetrica);
+      const gfaTela = estado.gfaMetrica;
+      estado.gfaMetrica = gfaMetrica;      // grafGfa le a metrica do estado
+      let imgGfa;
+      try { imgGfa = sg && png(cv => grafGfa(sg, reg, cv)); } finally { estado.gfaMetrica = gfaTela; }
+      graf.push(sg ? { t: 'Métricas de fogo · ' + m.titulo, img: imgGfa }
                    : { t: 'Métricas de fogo · ' + m.titulo, nota: 'Sem série do Global Fire Atlas para esta área.' });
       graf.push(!reg.eventos ? { t: `Eventos de fogo por mês, ${anoEv}`, nota: `Nenhum evento de fogo com o centroide nesta área em ${anoEv}.` }
         : !se ? { t: `Eventos de fogo por mês, ${anoEv}`, nota: 'Sem série mensal de eventos.' }
@@ -495,14 +567,14 @@
     });
   }
 
-  async function gerarFicha(rid) {
-    if (!rid) return;
+  async function gerarFicha(escolha) {
+    if (!escolha) return;
     // a janela abre ja no clique: depois de um await o navegador a bloquearia
     const win = window.open('', '_blank');
     if (!win) { alert('Permita janelas pop-up para gerar a ficha.'); return; }
     win.document.write('<p style="font:14px system-ui;padding:24px">Preparando a ficha…</p>');
     try {
-      const html = await montarFicha(rid);
+      const html = await montarFicha(escolha);
       if (win.closed) return;              // o leitor fechou a janela enquanto carregava
       win.document.open();
       win.document.write(html);
