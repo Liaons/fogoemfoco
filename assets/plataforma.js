@@ -733,14 +733,14 @@ function blocoEventos(reg, s) {
     <div class="bloco">
       <h2>Eventos de fogo · ${ev.ano || 2025}</h2>
       <div class="numeros-sel">
-        <div><b>${nf(reg.eventos)}</b><small>eventos no ano</small></div>
+        <div><b>${nf(reg.eventos)}</b><small>número de eventos</small></div>
         <div><b>${reg.ev_ranque ? reg.ev_ranque + 'º' : '—'}</b>
-             <small>ranque espacial em eventos, entre ${nf(comRanqueEspacial('ev_ranque'))} ${rotuloCamada()} do país</small></div>
-        <div><b>${nf(reg.ev_frentes)}</b><small>frentes de fogo</small></div>
+             <small>ranque espacial de eventos para ${ev.ano || 2025}, entre ${nf(comRanqueEspacial('ev_ranque'))} ${rotuloCamada()}</small></div>
+        <div><b>${nf(reg.ev_frentes)}</b><small>número de frentes</small></div>
         <div><b>${reg.ev_frentes_ranque ? reg.ev_frentes_ranque + 'º' : '—'}</b>
-             <small>ranque espacial em frentes, entre ${nf(comRanqueEspacial('ev_frentes_ranque'))} ${rotuloCamada()} do país</small></div>
-        <div><b>${reg.ev_dur_media === null || reg.ev_dur_media === undefined ? '—' : nf(reg.ev_dur_media, 1)}</b>
-             <small>dias, duração média sem os extremos</small></div>
+             <small>ranque espacial de frentes para ${ev.ano || 2025}, entre ${nf(comRanqueEspacial('ev_frentes_ranque'))} ${rotuloCamada()}</small></div>
+        <div class="largo"><b>${reg.ev_dur_media === null || reg.ev_dur_media === undefined ? '—' : nf(reg.ev_dur_media, 1) + ' dias'}</b>
+             <small>duração média dos eventos, sem os extremos</small></div>
       </div>
       ${s ? `<div class="grafico grafico-eventos"><canvas id="g-eventos"></canvas></div>
       <p class="chaves chaves-eventos">${TIPOS_EVENTO.map(([, rot, cor]) =>
