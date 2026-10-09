@@ -138,7 +138,61 @@
     atualizarPrevia();
   }
 
-  async function baixarCSV() {}   // tarefa 14
+  // Cede o navegador entre partes, para a pagina nao travar nos downloads grandes.
+  const ceder = () => new Promise(r => setTimeout(r, 0));
+
+  function salvarArquivo(bytes, nome, tipo) {
+    const url = URL.createObjectURL(new Blob([bytes], { type: tipo }));
+    const a = document.createElement('a');
+    a.href = url; a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  async function seriesDe(grupos, tipo) {
+    const linhas = []; let colunas = null;
+    for (const g of grupos) {
+      const chunks = [...new Set(g.feicoes.map(([, r]) => r.chunk || null))];
+      const series = {};
+      for (const ch of chunks) Object.assign(series, await serie(tipo, g.camada, ch));
+      const t = D.seriesLongas(tipo, g.rotulo, g.feicoes, series);
+      colunas = t.colunas;
+      for (const l of t.linhas) linhas.push(l);   // push(...) estoura a pilha em listas grandes
+      await ceder();
+    }
+    return colunas ? D.paraCSV(colunas, linhas) : null;
+  }
+
+  async function baixarCSV() {
+    const botao = document.getElementById('baixar-dl');
+    const previa = document.getElementById('previa-dl');
+    botao.disabled = true; botao.textContent = 'Preparando…';
+    try {
+      const { grupos, abr } = await gruposEscolhidos();
+      const area = abr.tipo === 'area' ? estado.atributos[estado.camada][estado.selecionado] : null;
+      const base = D.nomeBase(esc.camadas, abr.tipo === 'area' ? { tipo: 'area', nome: area && area.nome } : abr);
+      const tabela = D.montarTabela(grupos, esc.campos);
+      await ceder();
+      const arquivos = [
+        { nome: base + '.csv', texto: D.paraCSV(tabela.colunas, tabela.linhas), bom: true },
+        { nome: 'dicionario.csv', texto: (d => D.paraCSV(d.colunas, d.linhas))(D.dicionario(esc.campos)), bom: true },
+        { nome: 'LEIA.txt', texto: D.textoLeia({ geradoEm: new Date().toLocaleDateString('pt-BR') }), bom: true },
+      ];
+      if (esc.series) {
+        for (const tipo of ['gfa', 'clima', 'eventos']) {
+          previa.textContent = `Séries: ${tipo}…`;
+          const texto = await seriesDe(grupos, tipo);
+          if (texto) arquivos.push({ nome: `series_${tipo}.csv`, texto, bom: true });
+        }
+      }
+      salvarArquivo(D.zipar(arquivos), base + '.zip', 'application/zip');
+      previa.textContent = `Pronto: ${nf(tabela.linhas.length)} linhas.`;
+    } catch (e) {
+      previa.textContent = 'Não foi possível gerar o arquivo: ' + e.message;
+    } finally {
+      botao.disabled = false; botao.textContent = 'Baixar';
+    }
+  }
 
   function htmlFicha() { return '<p class="aviso-dl">Em construção.</p>'; }
   function ligarFicha() {}
