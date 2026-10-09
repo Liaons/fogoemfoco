@@ -748,9 +748,9 @@ function blocoEventos(reg, s) {
       <p class="nota">Os ranques de eventos são espaciais: a posição da área entre todas as da mesma camada
       no país em ${ev.ano || 2025} (1º = mais eventos ou frentes). Não comparam com anos anteriores, como os
       ranques da série histórica no topo do painel.</p>
-      <p class="nota">Eventos por mês de início, atribuídos pelo centroide. A duração média deixa de fora
-      os eventos acima de ${nf(ev.corte_dias || 15)} dias (percentil 99 do país) e fica sem valor com menos
-      de ${ev.min_eventos || 5} eventos.</p>
+      <p class="nota">A duração dos eventos é atribuída a partir da data estimada de início e fim. A duração
+      média é calculada até o percentil ${nf(99)} (${nf(ev.corte_dias || 15)} dias) e fica sem valor com menos de
+      ${ev.min_eventos || 5} eventos.</p>
     </div>`;
 }
 
