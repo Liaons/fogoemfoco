@@ -1,11 +1,16 @@
 /* Botao na barra do topo e janela "Baixar dados e analises". */
 .barra .baixar {
-  margin-left: auto; display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  display: inline-flex; white-space: nowrap; align-items: center; gap: 7px; cursor: pointer;
   border: 1px solid var(--laranja); background: var(--laranja); color: #fff; border-radius: 999px;
   padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 600;
 }
 .barra .baixar:hover { filter: brightness(1.08); }
-.barra .periodo + .baixar { margin-left: 14px; }
+@media (max-width: 720px) { .barra .periodo + .baixar { margin-left: auto; } }
+@media (max-width: 560px) {
+  .barra .baixar .rotulo { display: none; }
+  .barra { gap: 12px; }
+  .barra .baixar { padding: 7px 12px; font-size: 15px; }
+}
 
 .janela-download { position: fixed; inset: 0; z-index: 2000; background: rgba(10, 12, 28, .38); display: flex;
   align-items: flex-start; justify-content: center; padding: 72px 16px 16px; }
