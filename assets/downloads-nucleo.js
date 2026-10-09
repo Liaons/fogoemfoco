@@ -96,7 +96,9 @@
 
   FEFDownload.BLOCOS = BLOCOS;
   FEFDownload.CAMPOS = CAMPOS;
-  const ID_COLUNAS = ['camada', 'region_id', 'codigo', 'nome', 'uf'];
+  const ID_COLUNAS = ['camada', 'region_id', 'codigo', 'nome', 'uf', 'situacao'];
+  // Sem area queimada na serie (ou fora do processamento) nao ha anomalia nem mes de pico.
+  const SO_COM_FOGO = ['mes_pico', 'aq_anom_pct', 'aq_anom_dp'];
 
   function primeiraUf(v) {
     return v ? String(v).split(',')[0].trim() : '';
@@ -114,8 +116,9 @@
     if (abrangencia.tipo === 'area') {
       sel = abrangencia.camada === camada ? todas.filter(([rid]) => rid === String(abrangencia.rid)) : [];
     } else if (abrangencia.tipo === 'uf' && camada !== 'Biomas') {
+      // TIs em mais de um estado ("MT,PA") entram em cada um deles
       const uf = abrangencia.uf;
-      sel = todas.filter(([, r]) => (r.chunk || primeiraUf(r.uf)) === uf);
+      sel = todas.filter(([, r]) => String(r.chunk || r.uf || '').split(',').map(s => s.trim()).includes(uf));
     } else {
       sel = todas;
     }
@@ -130,9 +133,9 @@
     for (const g of grupos) {
       for (const [rid, r] of g.feicoes) {
         const ufc = g.camada === 'Biomas' ? '' : (g.camada === 'UCs' ? (r.chunk || '') : primeiraUf(r.uf));
-        const linha = [g.rotulo, String(rid), r.cod == null ? '' : String(r.cod), r.nome, ufc];
+        const linha = [g.rotulo, String(rid), r.cod == null ? '' : String(r.cod), r.nome, ufc, r.estado_dado || ''];
         for (const c of escolhidos) {
-          const v = r[c.id];
+          const v = r.estado_dado !== 'ok' && SO_COM_FOGO.includes(c.id) ? null : r[c.id];
           linha.push(v === null || v === undefined || !Number.isFinite(v)
             ? null : (c.fator === 1 ? v : Math.round(v * c.fator * 1e6) / 1e6));
         }
@@ -154,14 +157,18 @@
     codigo: ['código oficial da fonte (IBGE, CNUC, FUNAI)', ''],
     nome: ['nome da feição', ''],
     uf: ['sigla do estado; nas UCs e TIs em mais de um estado, o primeiro; vazio nos biomas', ''],
+    situacao: ['ok = com área queimada na série; sem_fogo = sem área queimada em 2002-2026 (0 km² é real); ' +
+               'fora = fora do processamento (vazio)', ''],
   };
 
   function quandoVazio(c) {
     if (c.bloco === 'clima') return 'sem série de clima atualizada (biomas não têm clima; municípios aguardam o arquivo novo)';
     if (c.bloco === 'focos' || c.id === 'focos_ranque') return 'sem foco de calor no período';
+    if (c.id === 'eventos') return 'nunca vazio: 0 quando não há evento em 2025';
     if (c.bloco === 'eventos') return c.id === 'ev_dur_media' ? 'menos de 5 eventos ou nenhum evento' : 'nenhum evento em 2025';
     if (c.bloco === 'gfa' || /^(n_incendios|tam_|taxa_)/.test(c.id)) return 'sem incêndio no período ou sem média na série';
-    return 'sem área queimada na série ou fora do processamento (nulo não é zero)';
+    if (['aq', 'aq_frac', 'aq_media', 'aq_dp'].includes(c.id)) return 'fora do processamento (situacao = fora); com situacao = sem_fogo vale 0, que é real';
+    return 'sem área queimada na série (situacao = sem_fogo) ou fora do processamento (nulo não é zero)';
   }
 
   function dicionario(campos) {
@@ -185,7 +192,20 @@
       '- series_*.csv (se pedidas): séries em formato longo, uma linha por área e por ano ou mês.',
       '',
       'Formato: CSV com separador vírgula, ponto decimal e codificação UTF-8.',
-      'Célula vazia significa dado ausente, nunca zero.',
+      'Célula vazia significa dado ausente, nunca zero. A coluna situacao diz o estado de',
+      'cada área: ok (com área queimada na série), sem_fogo (sem área queimada em 2002-2026:',
+      'área queimada, fração, média e desvio padrão valem 0, que é real; anomalias e mês de',
+      'pico ficam vazios) e fora (fora do processamento: área queimada vazia).',
+      'O número de eventos é 0 quando não houve evento de fogo.',
+      '',
+      'Séries (formato longo; vazio = dado ausente):',
+      '- series_gfa.csv: ano_inicio (período de março a fevereiro) e as cinco métricas do',
+      '  Global Fire Atlas (n_incendios, tam_max e tam_p95 em km², taxa_max e taxa_p95 em km²/dia).',
+      '- series_clima.csv: ano e mes (março de 2025 a fevereiro de 2026); t_media_c, t_min_c e',
+      '  t_max_c (°C) do mês e as médias históricas t_media_hist_c, t_min_hist_c e t_max_hist_c;',
+      '  precipitacao_mm do mês e a média histórica precipitacao_hist_mm.',
+      '- series_eventos.csv: ano e mes de 2025; número de eventos por tipo (queimada,',
+      '  possivel_incendio, incendio, atividade_antropica) e o total.',
       '',
       'Como abrir no Excel em português: Dados > Obter dados > De texto/CSV, escolher',
       'delimitador "Vírgula" e, em Transformar dados, a localidade "Inglês (Estados Unidos)"',
@@ -195,11 +215,15 @@
       'arbórea); Global Fire Atlas; INPE (focos de calor e eventos de fogo); ERA5 (clima,',
       'média histórica de 2003-2024). Ranque: posição do período na série de 24 períodos,',
       '1 = maior registro desde 2002.',
+    ].concat(o.climaMunicipios ? [
+      'Clima dos municípios: as séries ainda são da versão anterior, com média histórica de',
+      o.climaMunicipios + '; o arquivo mensal atualizado deste recorte ainda não chegou.',
+    ] : [], [
       '',
       'Como citar:',
       CITACAO,
       '',
-    ].join('\r\n');
+    ]).join('\r\n');
   }
 
   FEFDownload.CITACAO = CITACAO;
@@ -314,11 +338,25 @@
     return 'fogo-em-foco_2025-26_' + camadas.map(c => SLUG_CAMADA[c] || slug(c)).join('-') + '_' + onde;
   }
 
-  // Estimativa simples: ~9 bytes por celula numerica, ~40 pelas colunas de identificacao.
+  // Estimativa por linha: o rotulo da camada e o nome como estao, ~24 bytes pelas outras
+  // colunas de identificacao, a virgula de cada celula e ~6 bytes por celula preenchida
+  // (vazio nao ocupa nada alem da virgula). Fica a uns 10-20% do tamanho real.
   function previa(grupos, campos) {
-    const linhas = grupos.reduce((s, g) => s + g.feicoes.length, 0);
-    const colunas = ID_COLUNAS.length + CAMPOS.filter(c => campos.includes(c.id)).length;
-    return { linhas, colunas, bytes: linhas * (40 + 9 * (colunas - ID_COLUNAS.length)) };
+    const escolhidos = CAMPOS.filter(c => campos.includes(c.id));
+    const colunas = ID_COLUNAS.length + escolhidos.length;
+    let linhas = 0, bytes = 0;
+    for (const g of grupos) {
+      const fixo = String(g.rotulo || '').length + 24 + escolhidos.length;
+      for (const [, r] of g.feicoes) {
+        linhas++;
+        bytes += fixo + String(r.nome || '').length;
+        for (const c of escolhidos) {
+          const v = r[c.id];
+          if (v !== null && v !== undefined && Number.isFinite(v)) bytes += 6;
+        }
+      }
+    }
+    return { linhas, colunas, bytes };
   }
 
   function tamanhoLegivel(b) {

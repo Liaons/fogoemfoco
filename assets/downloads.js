@@ -44,12 +44,13 @@
 
   function escolhasIniciais() {
     const area = estado.selecionado;
+    const reg = area ? estado.atributos[estado.camada][area] : null;
+    // o filtro da plataforma pode ser de TI em mais de um estado ("AM,PA"): fica o primeiro
+    const ufFiltro = estado.filtroUf ? String(estado.filtroUf).split(',')[0].trim() : '';
     return {
       camadas: [estado.camada],
       abrangencia: area ? 'area' : (estado.filtroUf ? 'uf' : 'brasil'),
-      uf: estado.filtroUf || (area && estado.atributos[estado.camada][area]
-        ? String(estado.atributos[estado.camada][area].chunk || estado.atributos[estado.camada][area].uf || 'BA').split(',')[0].trim()
-        : 'BA'),
+      uf: ufFiltro || (reg ? String(reg.chunk || reg.uf || 'BA').split(',')[0].trim() : 'BA'),
       campos: D.CAMPOS.filter(c => c.padrao).map(c => c.id),
       series: false,
     };
@@ -82,7 +83,7 @@
       <div class="passo-dl"><h4>4 · Séries temporais <small>opcional</small></h4>
         <label class="abrang-dl"><input type="checkbox" id="series-dl"${esc.series ? ' checked' : ''}>
           Incluir as séries (GFA 2002-2025, clima mês a mês, eventos por mês)</label></div>
-      <div class="rodape-dl"><span id="previa-dl"></span><button type="button" id="baixar-dl">Baixar</button></div>`;
+      <div class="rodape-dl"><span id="previa-dl" aria-live="polite"></span><button type="button" id="baixar-dl">Baixar</button></div>`;
   }
 
   // Grupos [{camada, rotulo, feicoes}] das escolhas e (copia congelada ou atual). Carrega so os atributos.
@@ -213,7 +214,8 @@
       const arquivos = [
         { nome: base + '.csv', texto: D.paraCSV(tabela.colunas, tabela.linhas), bom: true },
         { nome: 'dicionario.csv', texto: (d => D.paraCSV(d.colunas, d.linhas))(D.dicionario(e.campos)), bom: true },
-        { nome: 'LEIA.txt', texto: D.textoLeia({ geradoEm: new Date().toLocaleDateString('pt-BR') }), bom: true },
+        { nome: 'LEIA.txt', texto: D.textoLeia({ geradoEm: new Date().toLocaleDateString('pt-BR'),
+          climaMunicipios: e.camadas.includes('Municipios') ? climaMunicipal() : '' }), bom: true },
       ];
       if (e.series) {
         for (const tipo of ['gfa', 'clima', 'eventos']) {
@@ -229,7 +231,14 @@
     } finally {
       gerando = false; conteudo.inert = false;
       botao.disabled = false; botao.textContent = 'Baixar';
+      if (!janela.hidden) botao.focus();   // o inert tirou o foco do botao
     }
+  }
+
+  // Referencia da serie de clima dos municipios quando ela ainda e a da versao anterior; '' se atualizada.
+  function climaMunicipal() {
+    const c = (estado.meta.camadas || {}).Municipios || {};
+    return c.clima_atualizado === false ? (c.clima_referencia || '2003-2023') : '';
   }
 
   /* ---------- aba da ficha ---------- */
@@ -346,7 +355,8 @@
       const tem = v !== null && v !== undefined && v > 0;
       return `<tr><td>${m.titulo}${m.unidade ? ` (${m.unidade.trim()})` : ''}</td><td>${tem ? nf(v, m.casas) : '—'}</td>
         <td>${reg[m.id + '_media'] === null || reg[m.id + '_media'] === undefined ? '—'
-          : nf(reg[m.id + '_media'], m.casas) + ' ± ' + nf(reg[m.id + '_dp'], m.casas)}</td>
+          : nf(reg[m.id + '_media'], m.casas) + (reg[m.id + '_dp'] === null || reg[m.id + '_dp'] === undefined
+            ? '' : ' ± ' + nf(reg[m.id + '_dp'], m.casas))}</td>
         <td>${tem && an !== null && an !== undefined ? `<span class="tag" style="background:${corAnomalia(an)}${an > -15 && an <= 50 ? ';color:#0a0c1c' : ''}">${comSinal(an, 0)}%</span>` : '—'}</td>
         <td>${tem && reg[m.id + '_ranque'] ? reg[m.id + '_ranque'] + 'º' : '—'}</td></tr>`;
     }).join('');
@@ -461,7 +471,9 @@
       const htmlGraf = graf.map(g => `<div class="bl"><h4>${g.t}</h4>${
         g.img ? `<img src="${g.img}" alt="">${g.abaixo || ''}` : `<p class="nota">${g.nota}</p>`}</div>`).join('');
       const titulo = `fogo-em-foco_2025-26_ficha_${D.slug(reg.nome)}`;
-      const uf = reg.uf ? ' · ' + escHtml(String(reg.uf).split(',')[0].trim()) : '';
+      // UCs: uf traz os nomes por extenso ("MINAS GERAIS, ..."); chunk e a sigla
+      const sigla = String(reg.chunk || reg.uf || '').split(',')[0].trim();
+      const uf = sigla && camada !== 'Biomas' ? ' · ' + escHtml(sigla) : '';
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${titulo}</title>
         <link rel="stylesheet" href="${new URL('assets/fontes/fontes.css', location.href).href}">
         <style>${CSS_FICHA}</style></head><body><div class="pag">

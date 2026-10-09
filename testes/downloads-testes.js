@@ -54,15 +54,16 @@ teste('catalogo: nomes de coluna unicos', () => {
 });
 
 const ATRIB = {
-  UF: { '60000025': { nome: 'Bahia', uf: 'BA', cod: '29', aq: 1622.1302, aq_frac: 0.011529, aq_ranque: 4, focos: 11653 },
-        '60000005': { nome: 'Paraná', uf: 'PR', cod: '41', aq: 12.5, aq_frac: 0.0001, aq_ranque: 20, focos: null } },
+  UF: { '60000025': { nome: 'Bahia', uf: 'BA', cod: '29', estado_dado: 'ok', aq: 1622.1302, aq_frac: 0.011529, aq_ranque: 4, focos: 11653 },
+        '60000005': { nome: 'Paraná', uf: 'PR', cod: '41', estado_dado: 'ok', aq: 12.5, aq_frac: 0.0001, aq_ranque: 20, focos: null } },
   Municipios: {
     '1': { nome: 'Barra', uf: 'BA', chunk: 'BA', cod: '2903201', aq: 412.3, aq_ranque: 4 },
     '2': { nome: 'Curitiba', uf: 'PR', chunk: 'PR', cod: '4106902', aq: null, aq_ranque: null },
   },
   Biomas: { '10000001': { nome: 'Amazônia', uf: null, cod: 'Amazônia', aq: 4305.8 } },
   TerrasIndigenas: { '20000001': { nome: 'Acapuri de Cima', uf: 'AM', cod: '101' },
-                     '20000002': { nome: 'Kayabi', uf: 'MT, PA', cod: '200' } },
+                     '20000002': { nome: 'Kayabi', uf: 'MT, PA', cod: '200' },
+                     '20000003': { nome: 'Andirá-Marau', uf: 'AM,PA', cod: '300' } },
 };
 
 teste('filtro: brasil devolve todas, em ordem de nome', () => {
@@ -73,7 +74,12 @@ teste('filtro: um estado', () => {
   igual(D.filtrarFeicoes(ATRIB.Municipios, 'Municipios', { tipo: 'uf', uf: 'PR' }).map(([r]) => r), ['2']);
   igual(D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'uf', uf: 'BA' }).map(([r]) => r), ['60000025']);
   igual(D.filtrarFeicoes(ATRIB.TerrasIndigenas, 'TerrasIndigenas', { tipo: 'uf', uf: 'MT' }).map(([r]) => r), ['20000002']);
+  igual(D.filtrarFeicoes(ATRIB.TerrasIndigenas, 'TerrasIndigenas', { tipo: 'uf', uf: 'AM' }).map(([r]) => r), ['20000001', '20000003']);
   igual(D.filtrarFeicoes(ATRIB.Biomas, 'Biomas', { tipo: 'uf', uf: 'BA' }).length, 1);
+});
+
+teste('filtro: TI em varios estados entra em cada um deles, nao so no primeiro', () => {
+  igual(D.filtrarFeicoes(ATRIB.TerrasIndigenas, 'TerrasIndigenas', { tipo: 'uf', uf: 'PA' }).map(([r]) => r), ['20000003', '20000002']);
 });
 
 teste('filtro: so a area aberta, e so na camada dela', () => {
@@ -84,9 +90,9 @@ teste('filtro: so a area aberta, e so na camada dela', () => {
 teste('tabela: identificacao + campos, fator aplicado, nulo vazio', () => {
   const t = D.montarTabela([{ camada: 'UF', rotulo: 'Estados',
     feicoes: D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'brasil' }) }], ['aq_ranque', 'aq_frac', 'focos']);
-  igual(t.colunas, ['camada', 'region_id', 'codigo', 'nome', 'uf', 'ranque_area_queimada', 'aq_frac_pct', 'focos']);
-  igual(t.linhas[0], ['Estados', '60000025', '29', 'Bahia', 'BA', 4, 1.1529, 11653]);
-  igual(t.linhas[1][7], null);
+  igual(t.colunas, ['camada', 'region_id', 'codigo', 'nome', 'uf', 'situacao', 'ranque_area_queimada', 'aq_frac_pct', 'focos']);
+  igual(t.linhas[0], ['Estados', '60000025', '29', 'Bahia', 'BA', 'ok', 4, 1.1529, 11653]);
+  igual(t.linhas[1][8], null);
 });
 
 teste('tabela: varias camadas empilhadas, campos na ordem do catalogo', () => {
@@ -94,20 +100,36 @@ teste('tabela: varias camadas empilhadas, campos na ordem do catalogo', () => {
     { camada: 'UF', rotulo: 'Estados', feicoes: D.filtrarFeicoes(ATRIB.UF, 'UF', { tipo: 'uf', uf: 'BA' }) },
     { camada: 'Municipios', rotulo: 'Municípios', feicoes: D.filtrarFeicoes(ATRIB.Municipios, 'Municipios', { tipo: 'uf', uf: 'BA' }) },
   ], ['aq', 'aq_ranque']);
-  igual(t.colunas.slice(5), ['ranque_area_queimada', 'aq_km2']);
+  igual(t.colunas.slice(6), ['ranque_area_queimada', 'aq_km2']);
   igual(t.linhas.map(l => l[0] + ':' + l[3]), ['Estados:Bahia', 'Municípios:Barra']);
+});
+
+teste('tabela: sem fogo ou fora, sem anomalia nem mes de pico; zero real fica', () => {
+  const t = D.montarTabela([{ camada: 'UCs', rotulo: 'UCs', feicoes: [
+    ['1', { nome: 'A', chunk: 'MG', estado_dado: 'sem_fogo', aq: 0, aq_media: 0, aq_anom_pct: 0, aq_anom_dp: 0, mes_pico: 7, eventos: 0 }],
+    ['2', { nome: 'B', chunk: 'MG', estado_dado: 'fora', aq: null, mes_pico: 3 }],
+    ['3', { nome: 'C', chunk: 'MG', estado_dado: 'ok', aq: 5, aq_anom_pct: 12, aq_anom_dp: 0.4, mes_pico: 8 }],
+  ] }], ['aq', 'aq_media', 'aq_anom_pct', 'aq_anom_dp', 'mes_pico', 'eventos']);
+  const col = (n) => t.colunas.indexOf(n);
+  igual(t.linhas.map(l => l[col('situacao')]), ['sem_fogo', 'fora', 'ok']);
+  igual([t.linhas[0][col('aq_km2')], t.linhas[0][col('aq_media_km2')], t.linhas[0][col('eventos')]], [0, 0, 0]);
+  igual([t.linhas[0][col('aq_anomalia_pct')], t.linhas[0][col('aq_anomalia_dp')], t.linhas[0][col('mes_pico')]], [null, null, null]);
+  igual(t.linhas[1][col('mes_pico')], null);
+  igual([t.linhas[2][col('aq_anomalia_pct')], t.linhas[2][col('mes_pico')]], [12, 8]);
 });
 
 teste('dicionario: uma linha por coluna, com as de identificacao', () => {
   const d = D.dicionario(['aq', 'focos']);
   igual(d.colunas, ['coluna', 'descricao', 'unidade', 'bloco', 'fonte', 'quando_vazio']);
-  igual(d.linhas.map(l => l[0]), ['camada', 'region_id', 'codigo', 'nome', 'uf', 'aq_km2', 'focos']);
-  verdadeiro(d.linhas[6][5].length > 0, 'focos explica o vazio');
+  igual(d.linhas.map(l => l[0]), ['camada', 'region_id', 'codigo', 'nome', 'uf', 'situacao', 'aq_km2', 'focos']);
+  verdadeiro(d.linhas[7][5].length > 0, 'focos explica o vazio');
+  verdadeiro(/sem_fogo/.test(d.linhas[5][1]) && /fora/.test(d.linhas[5][1]), 'situacao explica os estados');
+  verdadeiro(/0/.test(d.linhas[6][5]), 'aq: sem_fogo vale 0');
 });
 
 teste('dicionario: clima avisa que biomas nao tem dado', () => {
   const d = D.dicionario(['t_dif']);
-  verdadeiro(/bioma/i.test(d.linhas[5][5]));
+  verdadeiro(/bioma/i.test(d.linhas[6][5]));
 });
 
 teste('LEIA: periodo, citacao e como abrir no Excel', () => {
@@ -116,6 +138,13 @@ teste('LEIA: periodo, citacao e como abrir no Excel', () => {
   verdadeiro(t.includes('Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026'));
   verdadeiro(/Excel/.test(t));
   verdadeiro(t.includes('09/10/2026'));
+  verdadeiro(!/Clima dos municípios/.test(t), 'sem aviso quando o clima municipal esta atualizado');
+});
+
+teste('LEIA: avisa a referencia antiga do clima municipal e descreve as series', () => {
+  const t = D.textoLeia({ geradoEm: '09/10/2026', climaMunicipios: '2003-2023' });
+  verdadeiro(/Clima dos municípios/.test(t) && t.includes('2003-2023'));
+  verdadeiro(t.includes('precipitacao_hist_mm') && t.includes('ano_inicio'));
 });
 
 const FEIC = [['60000025', { nome: 'Bahia', uf: 'BA' }]];
@@ -179,8 +208,14 @@ teste('nome: recortes e abrangencia sem acento', () => {
 
 teste('previa: linhas, colunas e tamanho aproximado', () => {
   const p = D.previa([{ feicoes: [['1', {}], ['2', {}]] }, { feicoes: [['3', {}]] }], ['aq', 'focos']);
-  igual([p.linhas, p.colunas], [3, 7]);
+  igual([p.linhas, p.colunas], [3, 8]);
   verdadeiro(p.bytes > 0);
+});
+
+teste('previa: celula vazia pesa menos que preenchida', () => {
+  const vazias = D.previa([{ rotulo: 'X', feicoes: [['1', { nome: 'A' }]] }], ['aq', 'focos']);
+  const cheias = D.previa([{ rotulo: 'X', feicoes: [['1', { nome: 'A', aq: 1.5, focos: 10 }]] }], ['aq', 'focos']);
+  igual(cheias.bytes - vazias.bytes, 12);
 });
 
 teste('tamanho legivel', () => {
