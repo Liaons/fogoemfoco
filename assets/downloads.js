@@ -250,36 +250,43 @@
 
   function ligarFicha() {
     const b = document.getElementById('gerar-ficha');
-    if (b) b.onclick = () => gerarFicha(estado.selecionado);
+    if (!b) return;
+    b.onclick = async () => {
+      if (b.disabled) return;
+      b.disabled = true;       // um clique duplo nao abre duas janelas
+      try { await gerarFicha(estado.selecionado); }
+      finally { b.disabled = false; }
+    };
   }
 
-  // Feicoes e cores do mapa da ficha. Estado: os municipios dele. Outras camadas: a area
-  // e as vizinhas da mesma camada num quadro 60% maior que a area.
-  async function mapaDaFicha(camada, rid, def) {
+  // Feicoes do mapa da ficha (so a carga, antes de trocar o tema). Estado: os municipios
+  // dele. Outras camadas: a area e as vizinhas da mesma camada num quadro 60% maior que a area.
+  async function carregarMapaDaFicha(camada, rid) {
     const reg = estado.atributos[camada][rid];
-    let feicoes, regs, destaque = rid, limites;
     if (camada === 'UF') {
       await garantirCamada('Municipios');
       const am = estado.atributos.Municipios;
-      feicoes = estado.geometrias.Municipios.features.filter(f => (am[String(f.properties.rid)] || {}).uf === reg.uf);
-      regs = feicoes.map(f => am[String(f.properties.rid)]);
-      destaque = undefined;
-    } else {
-      await garantirCamada(camada);
-      const geo = estado.geometrias[camada].features;
-      const alvo = geo.find(f => String(f.properties.rid) === String(rid));
-      const [x0, y0, x1, y1] = D.caixa([alvo]);
-      const mx = Math.max((x1 - x0) * 0.6, 0.3), my = Math.max((y1 - y0) * 0.6, 0.3);
-      limites = [x0 - mx, y0 - my, x1 + mx, y1 + my];
-      feicoes = geo.filter(f => { const [a, b, c, d] = D.caixa([f]);
-        return c >= limites[0] && a <= limites[2] && d >= limites[1] && b <= limites[3]; });
-      regs = feicoes.map(f => estado.atributos[camada][String(f.properties.rid)]).filter(Boolean);
+      const feicoes = estado.geometrias.Municipios.features.filter(f => (am[String(f.properties.rid)] || {}).uf === reg.uf);
+      return { feicoes, regs: feicoes.map(f => am[String(f.properties.rid)]), atrib: am, destaque: undefined };
     }
-    const atrib = camada === 'UF' ? estado.atributos.Municipios : estado.atributos[camada];
-    const faixa = faixaDe(regs, def);
-    const svg = D.mapaSVG(feicoes, { cor: (r) => corPara(atrib[r], def, faixa), destaque,
-      largura: 420, altura: 300, limites, linha: '#ffffff', fundo: '#f4f1ec' });
-    return { svg, legenda: legendaHTML(def, faixa, regs),
+    await garantirCamada(camada);
+    const geo = estado.geometrias[camada].features;
+    const alvo = geo.find(f => String(f.properties.rid) === String(rid));
+    const [x0, y0, x1, y1] = D.caixa([alvo]);
+    const mx = Math.max((x1 - x0) * 0.6, 0.3), my = Math.max((y1 - y0) * 0.6, 0.3);
+    const limites = [x0 - mx, y0 - my, x1 + mx, y1 + my];
+    const feicoes = geo.filter(f => { const [a, b, c, d] = D.caixa([f]);
+      return c >= limites[0] && a <= limites[2] && d >= limites[1] && b <= limites[3]; });
+    const atrib = estado.atributos[camada];
+    return { feicoes, regs: feicoes.map(f => atrib[String(f.properties.rid)]).filter(Boolean), atrib, destaque: rid, limites };
+  }
+
+  // Cores, SVG e legenda do mapa da ficha (sincrono: roda com o tema claro forcado).
+  function desenharMapaDaFicha(m, camada, def) {
+    const faixa = faixaDe(m.regs, def);
+    const svg = D.mapaSVG(m.feicoes, { cor: (r) => corPara(m.atrib[r], def, faixa), destaque: m.destaque,
+      largura: 420, altura: 300, limites: m.limites, linha: '#ffffff', fundo: '#f4f1ec' });
+    return { svg, legenda: legendaHTML(def, faixa, m.regs),
              titulo: camada === 'UF' ? `${def.rotulo} por município` : `${def.rotulo} na região` };
   }
 
@@ -326,10 +333,10 @@
     }).join('');
   }
 
-  function htmlNumeros(reg) {
+  function htmlNumeros(reg, anoEv) {
     const aq = reg.estado_dado === 'ok'
       ? `<div class="nums"><div><b>${nf(reg.aq, 1)} km²</b>no período</div>
-           <div><b>${reg.aq_anom_pct === null ? '—' : comSinal(reg.aq_anom_pct, 0) + '%'}</b>vs. média (${nf(reg.aq_media, 0)} km²)</div>
+           <div><b>${reg.aq_anom_pct === null ? '—' : comSinal(reg.aq_anom_pct, 0) + '%'}</b>vs. média${reg.aq_media === null || reg.aq_media === undefined ? '' : ` (${nf(reg.aq_media, 0)} km²)`}</div>
            <div><b>${reg.aq_frac === null ? '—' : nf(reg.aq_frac * 100, 2) + '%'}</b>do território</div></div>
          ${reg.mes_pico ? `<small class="pico"><i style="background:${corMes(reg.mes_pico)}"></i>mês de pico da anomalia: ${
            MESES_EXTENSO[reg.mes_pico - 1]}</small>` : ''}`
@@ -349,7 +356,7 @@
         <th>anomalia</th><th>ranque</th></tr>${linhasGfa}</table></div>
       <div class="bl"><h4>Focos e eventos</h4><div class="nums">
         <div><b>${reg.focos ? nf(reg.focos) : '—'}</b>focos de calor</div>
-        <div><b>${reg.eventos ? nf(reg.eventos) : '—'}</b>eventos em 2025</div>
+        <div><b>${reg.eventos ? nf(reg.eventos) : '—'}</b>eventos em ${anoEv}</div>
         <div><b>${reg.ev_dur_media === null || reg.ev_dur_media === undefined ? '—' : nf(reg.ev_dur_media, 1) + ' dias'}</b>duração média</div></div></div>`;
   }
 
@@ -372,6 +379,9 @@
     .mapa small { color: #6b6f7e; } .mapa svg { display: block; margin: 1mm 0; }
     .blocos { display: grid; gap: 2mm; align-content: start; }
     .bl h4 { margin: 0 0 1.2mm; font-size: 7pt; letter-spacing: .08em; text-transform: uppercase; color: #d64a0d; } .bl h4 .un { text-transform: none; letter-spacing: 0; }
+    .chave-graf svg { vertical-align: middle; margin-right: .8mm; }
+    .chave-graf { margin: .6mm 0 0; font-size: 6.5pt; color: #6b6f7e; display: flex; gap: 3mm; justify-content: center; }
+    .chave-graf i { display: inline-block; width: 2.2mm; height: 2.2mm; border-radius: .4mm; margin-right: .8mm; vertical-align: -.2mm; }
     .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5mm; } .nums b { display: block; font-size: 10.5pt; }
     .pico { display: block; margin-top: 1mm; color: #6b6f7e; }
     .pico i { display: inline-block; width: 2.4mm; height: 2.4mm; border-radius: .5mm; margin-right: 1mm; vertical-align: -.3mm; }
@@ -388,39 +398,68 @@
     .rod .l2 b { color: #0a0c1c; } .rod .logos { display: flex; gap: 4mm; align-items: center; } .rod .logos img { height: 7mm; }
   `;
 
-  // HTML completo da ficha A4 da area rid na camada aberta, com a variavel do mapa. Os
-  // graficos e as cores de "sem dado" saem com o tema claro forcado (cores do papel); o
-  // tema do leitor volta no fim.
+  // Roda desenhar() com o tema claro forcado (cores do papel nos graficos e no "sem dado"
+  // do mapa) e devolve o tema do leitor logo depois. Sincrono: a plataforma nao chega a
+  // aparecer clara.
+  function comTemaClaro(desenhar) {
+    const raiz = document.documentElement;
+    const antes = raiz.dataset.tema;
+    raiz.dataset.tema = 'claro';
+    try { return desenhar(); }
+    finally {
+      if (antes) raiz.dataset.tema = antes;
+      else delete raiz.dataset.tema;
+    }
+  }
+
+  // Chaves pequenas dos graficos: um traco por serie, ou um quadrado por tipo de evento.
+  const traco = (cor, tracejado) => `<svg width="14" height="6" viewBox="0 0 14 6"><line x1="0" y1="3" x2="14" y2="3"
+    stroke="${cor}" stroke-width="2"${tracejado ? ' stroke-dasharray="3 2"' : ''}/></svg>`;
+  const chaveEventos = () => `<p class="chave-graf">${TIPOS_EVENTO.map(([, rot, cor]) =>
+    `<span><i style="background:${cor}"></i>${rot}</span>`).join('')}</p>`;
+
+  // HTML completo da ficha A4 da area rid na camada aberta, com a variavel do mapa. Tudo o
+  // que carrega vem primeiro; o desenho (graficos, mapa, cores) sai de uma vez com o tema
+  // claro forcado.
   async function montarFicha(rid) {
     const camada = estado.camada;
     const reg = estado.atributos[camada][rid];
     const def = defAtual();
-    const temaAntes = document.documentElement.dataset.tema;
-    document.documentElement.dataset.tema = 'claro';
-    try {
-      const sg = (await serie('gfa', camada, reg.chunk || null))[rid];
-      const sc = (await serie('clima', camada, reg.chunk || null))[rid];
-      const se = (await serie('eventos', camada, reg.chunk || null))[rid];
-      const mapa = await mapaDaFicha(camada, rid, def);
-      const png = (fn) => graficoPNG(fn, 340, 120);
+    const anoEv = (estado.meta.eventos || {}).ano || 2025;
+    const sg = (await serie('gfa', camada, reg.chunk || null))[rid];
+    const sc = (await serie('clima', camada, reg.chunk || null))[rid];
+    const se = (await serie('eventos', camada, reg.chunk || null))[rid];
+    const dadosMapa = await carregarMapaDaFicha(camada, rid);
+    const clima = climaDaCamada();
+    const avisoClima = camada === 'Biomas' ? 'Os biomas não têm série de clima.'
+      : !sc ? 'Sem série de clima para esta área.'
+      : !clima.atualizado ? `Série de clima da versão anterior (média ${clima.ref}): o arquivo mensal atualizado deste recorte ainda não chegou.`
+      : '';
+
+    return comTemaClaro(() => {
+      const mapa = desenharMapaDaFicha(dadosMapa, camada, def);
+      const png = (fn, altura = 120) => graficoPNG(fn, 340, altura);
+      const chaveClima = (temp) => `<p class="chave-graf"><span>${traco(temp ? css('--laranja') : css('--azul-claro'))}período
+        ${estado.meta.periodo_curto}</span><span>${traco(css('--serie-media') || '#aaa39a', true)}média ${clima.ref}</span></p>`;
+      // celulas da grade de 3 x 2: { t: titulo, img | nota, abaixo? }. Os graficos com chave
+      // embaixo sao mais baixos, para a celula ficar com a altura das outras.
       const graf = [];
-      if (sg) graf.push(['Métricas de fogo · ' + METRICAS_GFA.find(m => m.id === estado.gfaMetrica).titulo, png(cv => grafGfa(sg, reg, cv))]);
-      graf.push(['Eventos de fogo por mês, 2025', se && reg.eventos ? png(cv => grafEventos(se, cv)) : null]);
+      const m = METRICAS_GFA.find(x => x.id === estado.gfaMetrica);
+      graf.push(sg ? { t: 'Métricas de fogo · ' + m.titulo, img: png(cv => grafGfa(sg, reg, cv)) }
+                   : { t: 'Métricas de fogo · ' + m.titulo, nota: 'Sem série do Global Fire Atlas para esta área.' });
+      graf.push(!reg.eventos ? { t: `Eventos de fogo por mês, ${anoEv}`, nota: `Nenhum evento de fogo com o centroide nesta área em ${anoEv}.` }
+        : !se ? { t: `Eventos de fogo por mês, ${anoEv}`, nota: 'Sem série mensal de eventos.' }
+        : { t: `Eventos de fogo por mês, ${anoEv}`, img: png(cv => grafEventos(se, cv), 106), abaixo: chaveEventos() });
       if (camada === 'Biomas' || !sc) {
-        graf.push(['Clima', null]);
+        graf.push({ t: 'Clima', nota: avisoClima });
       } else {
-        graf.push(['Temperatura média mensal <span class="un">(°C)</span>', png(cv => grafClima(sc, true, cv))],
-                  ['Precipitação mensal <span class="un">(mm)</span>', png(cv => grafClima(sc, false, cv))],
-                  ['Temperatura: diferença da média <span class="un">(°C)</span>', png(cv => grafDif(sc, true, cv))],
-                  ['Precipitação: diferença da média <span class="un">(mm)</span>', png(cv => grafDif(sc, false, cv))]);
+        graf.push({ t: 'Temperatura média mensal <span class="un">(°C)</span>', img: png(cv => grafClima(sc, true, cv), 106), abaixo: chaveClima(true) },
+                  { t: 'Precipitação mensal <span class="un">(mm)</span>', img: png(cv => grafClima(sc, false, cv), 106), abaixo: chaveClima(false) },
+                  { t: 'Temperatura: diferença da média <span class="un">(°C)</span>', img: png(cv => grafDif(sc, true, cv)) },
+                  { t: 'Precipitação: diferença da média <span class="un">(mm)</span>', img: png(cv => grafDif(sc, false, cv)) });
       }
-      const clima = climaDaCamada();
-      const avisoClima = camada === 'Biomas' ? 'Os biomas não têm série de clima.'
-        : !sc ? 'Sem série de clima para esta área.'
-        : !clima.atualizado ? `Série de clima da versão anterior (média ${clima.ref}): o arquivo mensal atualizado deste recorte ainda não chegou.`
-        : '';
-      const htmlGraf = graf.map(([t, img]) => `<div class="bl"><h4>${t}</h4>${img ? `<img src="${img}" alt="">`
-        : `<p class="nota">${t === 'Clima' ? avisoClima : 'Nenhum evento de fogo com o centroide nesta área em 2025.'}</p>`}</div>`).join('');
+      const htmlGraf = graf.map(g => `<div class="bl"><h4>${g.t}</h4>${
+        g.img ? `<img src="${g.img}" alt="">${g.abaixo || ''}` : `<p class="nota">${g.nota}</p>`}</div>`).join('');
       const titulo = `fogo-em-foco_2025-26_ficha_${D.slug(reg.nome)}`;
       const uf = reg.uf ? ' · ' + escHtml(String(reg.uf).split(',')[0].trim()) : '';
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${titulo}</title>
@@ -431,7 +470,7 @@
           <img src="${LOGO('logo_fogoemfoco_horizontal_claro.svg')}" alt="Fogo em Foco"></div>
         <div class="rq">${htmlRanques(reg, def)}</div>
         <div class="meio"><div class="mapa"><small>${mapa.titulo}</small>${mapa.svg}<div class="leg">${mapa.legenda}</div></div>
-          <div class="blocos">${htmlNumeros(reg)}</div></div>
+          <div class="blocos">${htmlNumeros(reg, anoEv)}</div></div>
         <div class="graf">${htmlGraf}</div>
         <div class="rod"><div>Fontes: área queimada MODIS MCD64A1 (vegetação com ≥30% de cobertura arbórea); Global Fire Atlas;
           focos e eventos de fogo do INPE; clima ERA5 (média ${clima.ref}). Ranque: posição na série de 24 períodos, 1º = maior
@@ -441,10 +480,7 @@
             <img src="${LOGO('logo_inpe.svg')}" alt="INPE"><img src="${LOGO('logo_brasa.svg')}" alt="Rede BRASA">
             <img src="${LOGO('logo_trees_claro.svg')}" alt="TREES"></div></div></div>
         </div></body></html>`;
-    } finally {
-      if (temaAntes) document.documentElement.dataset.tema = temaAntes;
-      else delete document.documentElement.dataset.tema;
-    }
+    });
   }
 
   async function gerarFicha(rid) {
@@ -455,17 +491,21 @@
     win.document.write('<p style="font:14px system-ui;padding:24px">Preparando a ficha…</p>');
     try {
       const html = await montarFicha(rid);
+      if (win.closed) return;              // o leitor fechou a janela enquanto carregava
       win.document.open();
       win.document.write(html);
       win.document.close();
       // espera as imagens e as fontes antes de imprimir
       if (win.document.readyState !== 'complete') await new Promise(r => win.addEventListener('load', r, { once: true }));
       await win.document.fonts.ready;
+      if (win.closed) return;
       win.focus();
       win.print();
     } catch (e) {
-      win.document.body.innerHTML = '<p style="font:14px system-ui;padding:24px">Não foi possível gerar a ficha: ' +
-        escHtml(e.message) + '</p>';
+      if (!win.closed) {
+        win.document.body.innerHTML = '<p style="font:14px system-ui;padding:24px">Não foi possível gerar a ficha: ' +
+          escHtml(e.message) + '</p>';
+      }
     }
   }
 
