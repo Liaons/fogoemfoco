@@ -286,6 +286,11 @@ function ehTopo(reg) {
 
 /* ---------- carga ---------- */
 
+// So os atributos da camada (sem baixar a geometria): bastam para a previa e o CSV.
+async function garantirAtributos(id) {
+  if (!estado.atributos[id]) estado.atributos[id] = await json('atributos/' + id + '.json');
+}
+
 async function garantirCamada(id) {
   const def = CAMADAS.find(c => c.id === id);
   if (!estado.atributos[id]) estado.atributos[id] = await json('atributos/' + id + '.json');

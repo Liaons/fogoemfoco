@@ -10,13 +10,13 @@
 
   function abrir() {
     janela.hidden = false;
-    esc = null;
+    esc = null; seqPrevia++;
     trocarAba(aba);
     document.getElementById('fechar-download').focus();
   }
 
   function fechar() {
-    janela.hidden = true;
+    janela.hidden = true; seqPrevia++;
     document.getElementById('abrir-download').focus();
   }
 
@@ -37,6 +37,10 @@
                'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
   // escolhas da aba CSV; preenchidas a cada abertura a partir do estado da tela
   let esc = null;
+  let seqPrevia = 0;      // descarta resultados atrasados da previa
+  let gerando = false;    // true enquanto o zip e montado
+  // escapa texto para entrar em innerHTML
+  const escHtml = (s) => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
   function escolhasIniciais() {
     const area = estado.selecionado;
@@ -72,7 +76,7 @@
       <div class="passo-dl"><h4>2 · Abrangência</h4><div class="abrang-dl">
         ${radio('brasil', 'Brasil inteiro')}
         ${radio('uf', 'Um estado:', ` <select id="uf-dl">${UFS.map(u => `<option${u === esc.uf ? ' selected' : ''}>${u}</option>`).join('')}</select>`)}
-        ${radio('area', area ? `Só ${area.nome}` : 'Só a área aberta no painel', '', !area)}</div></div>
+        ${radio('area', area ? `Só ${escHtml(area.nome)}` : 'Só a área aberta no painel', '', !area)}</div></div>
       <div class="passo-dl"><h4>3 · Variáveis <small>o bloco inteiro ou só algumas</small></h4>
         <div class="blocos-dl">${blocos}</div></div>
       <div class="passo-dl"><h4>4 · Séries temporais <small>opcional</small></h4>
@@ -81,14 +85,14 @@
       <div class="rodape-dl"><span id="previa-dl"></span><button type="button" id="baixar-dl">Baixar</button></div>`;
   }
 
-  // Grupos [{camada, rotulo, feicoes}] das escolhas atuais. Carrega as camadas que faltam.
-  async function gruposEscolhidos() {
-    const abr = esc.abrangencia === 'area'
-      ? { tipo: 'area', camada: estado.camada, rid: estado.selecionado }
-      : esc.abrangencia === 'uf' ? { tipo: 'uf', uf: esc.uf } : { tipo: 'brasil' };
+  // Grupos [{camada, rotulo, feicoes}] das escolhas e (copia congelada ou atual). Carrega so os atributos.
+  async function gruposEscolhidos(e) {
+    const abr = e.abrangencia === 'area'
+      ? { tipo: 'area', camada: e.areaCamada || estado.camada, rid: e.areaRid || estado.selecionado }
+      : e.abrangencia === 'uf' ? { tipo: 'uf', uf: e.uf } : { tipo: 'brasil' };
     const grupos = [];
-    for (const id of esc.camadas) {
-      await garantirCamada(id);
+    for (const id of e.camadas) {
+      await garantirAtributos(id);
       const cam = CAMADAS.find(c => c.id === id);
       grupos.push({ camada: id, rotulo: cam.rotulo, feicoes: D.filtrarFeicoes(estado.atributos[id], id, abr) });
     }
@@ -97,18 +101,41 @@
 
   async function atualizarPrevia() {
     const alvo = document.getElementById('previa-dl');
-    if (!alvo) return;
+    const botao = document.getElementById('baixar-dl');
+    if (!alvo || !esc || gerando) return;
+    const meu = ++seqPrevia;
+    botao.disabled = true;
     if (!esc.camadas.length || !esc.campos.length) {
       alvo.textContent = 'Escolha ao menos um recorte e uma variável.';
-      document.getElementById('baixar-dl').disabled = true;
       return;
     }
-    document.getElementById('baixar-dl').disabled = false;
     alvo.textContent = 'Calculando…';
-    const { grupos } = await gruposEscolhidos();
-    const p = D.previa(grupos, esc.campos);
-    alvo.textContent = `${nf(p.linhas)} linhas · ${p.colunas} colunas · ~${D.tamanhoLegivel(p.bytes)}` +
-      (esc.series ? ' + séries' : '');
+    try {
+      const e = JSON.parse(JSON.stringify(esc));
+      const { grupos } = await gruposEscolhidos(e);
+      if (meu !== seqPrevia) return;
+      const p = D.previa(grupos, e.campos);
+      if (!p.linhas) { alvo.textContent = 'Nenhuma área nesta combinação de recorte e abrangência.'; return; }
+      alvo.textContent = `${nf(p.linhas)} linhas · ${p.colunas} colunas · ~${D.tamanhoLegivel(p.bytes)}` +
+        (e.series ? ' + séries' : '') +
+        (e.abrangencia === 'uf' && e.camadas.includes('Biomas') ? ' · biomas inteiros' : '');
+      botao.disabled = false;
+    } catch (err) {
+      if (meu === seqPrevia) alvo.textContent = 'Não foi possível calcular a prévia: ' + err.message;
+    }
+  }
+
+  // Atualiza as caixas dos blocos e das variaveis no lugar, sem redesenhar (o foco fica onde estava).
+  function sincronizar() {
+    conteudo.querySelectorAll('input[name="campo-dl"]').forEach(i => { i.checked = esc.campos.includes(i.value); });
+    conteudo.querySelectorAll('input[data-bloco]').forEach(i => {
+      const cs = D.CAMPOS.filter(c => c.bloco === i.dataset.bloco).map(c => c.id);
+      const n = cs.filter(id => esc.campos.includes(id)).length;
+      i.checked = n === cs.length;
+      i.indeterminate = n > 0 && n < cs.length;
+      const pequeno = i.closest('summary').querySelector('small');
+      if (pequeno) pequeno.textContent = `(${n} de ${cs.length})`;
+    });
   }
 
   function ligarCSV() {
@@ -118,10 +145,14 @@
       atualizarPrevia();
     });
     caixa.querySelectorAll('input[name="abrang-dl"]').forEach(i => i.onchange = () => { esc.abrangencia = i.value; atualizarPrevia(); });
-    caixa.querySelector('#uf-dl').onchange = (e) => { esc.uf = e.target.value; esc.abrangencia = 'uf'; trocarAba('csv'); atualizarPrevia(); };
+    caixa.querySelector('#uf-dl').onchange = (e) => {
+      esc.uf = e.target.value; esc.abrangencia = 'uf';
+      caixa.querySelector('input[name="abrang-dl"][value="uf"]').checked = true;
+      atualizarPrevia();
+    };
     caixa.querySelectorAll('input[name="campo-dl"]').forEach(i => i.onchange = () => {
       esc.campos = [...caixa.querySelectorAll('input[name="campo-dl"]:checked')].map(x => x.value);
-      trocarAba('csv');
+      sincronizar(); atualizarPrevia();
     });
     caixa.querySelectorAll('input[data-bloco]').forEach(i => {
       const cs = D.CAMPOS.filter(c => c.bloco === i.dataset.bloco).map(c => c.id);
@@ -130,7 +161,7 @@
       i.onclick = (e) => e.stopPropagation();   // nao abre/fecha o details
       i.onchange = () => {
         esc.campos = i.checked ? [...new Set(esc.campos.concat(cs))] : esc.campos.filter(id => !cs.includes(id));
-        trocarAba('csv');
+        sincronizar(); atualizarPrevia();
       };
     });
     caixa.querySelector('#series-dl').onchange = (e) => { esc.series = e.target.checked; atualizarPrevia(); };
@@ -160,25 +191,31 @@
       for (const l of t.linhas) linhas.push(l);   // push(...) estoura a pilha em listas grandes
       await ceder();
     }
-    return colunas ? D.paraCSV(colunas, linhas) : null;
+    return colunas && linhas.length ? D.paraCSV(colunas, linhas) : null;
   }
 
   async function baixarCSV() {
+    if (gerando || !esc) return;
+    const e = JSON.parse(JSON.stringify(esc));   // copia congelada das escolhas
+    e.areaCamada = estado.camada; e.areaRid = estado.selecionado;
     const botao = document.getElementById('baixar-dl');
     const previa = document.getElementById('previa-dl');
+    gerando = true; seqPrevia++;
+    conteudo.inert = true;
     botao.disabled = true; botao.textContent = 'Preparando…';
+    await ceder();
     try {
-      const { grupos, abr } = await gruposEscolhidos();
-      const area = abr.tipo === 'area' ? estado.atributos[estado.camada][estado.selecionado] : null;
-      const base = D.nomeBase(esc.camadas, abr.tipo === 'area' ? { tipo: 'area', nome: area && area.nome } : abr);
-      const tabela = D.montarTabela(grupos, esc.campos);
+      const { grupos, abr } = await gruposEscolhidos(e);
+      const area = abr.tipo === 'area' ? estado.atributos[abr.camada][abr.rid] : null;
+      const base = D.nomeBase(e.camadas, abr.tipo === 'area' ? { tipo: 'area', nome: area && area.nome } : abr);
+      const tabela = D.montarTabela(grupos, e.campos);
       await ceder();
       const arquivos = [
         { nome: base + '.csv', texto: D.paraCSV(tabela.colunas, tabela.linhas), bom: true },
-        { nome: 'dicionario.csv', texto: (d => D.paraCSV(d.colunas, d.linhas))(D.dicionario(esc.campos)), bom: true },
+        { nome: 'dicionario.csv', texto: (d => D.paraCSV(d.colunas, d.linhas))(D.dicionario(e.campos)), bom: true },
         { nome: 'LEIA.txt', texto: D.textoLeia({ geradoEm: new Date().toLocaleDateString('pt-BR') }), bom: true },
       ];
-      if (esc.series) {
+      if (e.series) {
         for (const tipo of ['gfa', 'clima', 'eventos']) {
           previa.textContent = `Séries: ${tipo}…`;
           const texto = await seriesDe(grupos, tipo);
@@ -187,9 +224,10 @@
       }
       salvarArquivo(D.zipar(arquivos), base + '.zip', 'application/zip');
       previa.textContent = `Pronto: ${nf(tabela.linhas.length)} linhas.`;
-    } catch (e) {
-      previa.textContent = 'Não foi possível gerar o arquivo: ' + e.message;
+    } catch (err) {
+      previa.textContent = 'Não foi possível gerar o arquivo: ' + err.message;
     } finally {
+      gerando = false; conteudo.inert = false;
       botao.disabled = false; botao.textContent = 'Baixar';
     }
   }
