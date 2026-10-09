@@ -210,3 +210,22 @@ teste('svg do mapa: caixa forcada recorta o enquadramento', () => {
   const svg = D.mapaSVG([QUAD('a', -50, -10, -49, -9)], { cor: () => '#000', largura: 100, altura: 100, limites: [-60, -20, -40, 0] });
   verdadeiro(svg.includes('viewBox="0 0 100 100"'));
 });
+
+teste('series eventos: mes sem nenhum tipo tem total nulo', () => {
+  const t = D.seriesLongas('eventos', 'Estados', FEIC, { '60000025': { queimada: [null, 1] } });
+  igual(t.linhas[0][t.colunas.indexOf('total')], null);
+  igual(t.linhas[1][t.colunas.indexOf('total')], 1);
+});
+
+teste('tabela: codigo nulo vira celula vazia', () => {
+  const t = D.montarTabela([{ camada: 'UF', rotulo: 'Estados', feicoes: [['1', { nome: 'X', uf: 'BA', cod: null }]] }], []);
+  igual(t.linhas[0][2], '');
+});
+
+teste('svg do mapa: clipPath com id unico por chamada', () => {
+  const op = { cor: () => '#000', largura: 100, altura: 100 };
+  const a = D.mapaSVG([QUAD('a', -50, -10, -49, -9)], op), b = D.mapaSVG([QUAD('a', -50, -10, -49, -9)], op);
+  const id = (s) => s.match(/clipPath id="([^"]+)"/)[1];
+  verdadeiro(id(a) !== id(b));
+  verdadeiro(a.includes('url(#' + id(a) + ')'));
+});

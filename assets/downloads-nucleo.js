@@ -130,7 +130,7 @@
     for (const g of grupos) {
       for (const [rid, r] of g.feicoes) {
         const ufc = g.camada === 'Biomas' ? '' : (g.camada === 'UCs' ? (r.chunk || '') : primeiraUf(r.uf));
-        const linha = [g.rotulo, String(rid), r.cod === undefined ? '' : String(r.cod), r.nome, ufc];
+        const linha = [g.rotulo, String(rid), r.cod == null ? '' : String(r.cod), r.nome, ufc];
         for (const c of escolhidos) {
           const v = r[c.id];
           linha.push(v === null || v === undefined || !Number.isFinite(v)
@@ -234,7 +234,7 @@
       for (let i = 0; i < n; i++) {
         const tempo = tipo === 'gfa' ? [s.ano[i]] : (tipo === 'clima' ? MESES_CLIMA[i] : [2025, i + 1]);
         const vals = def.campos.map(([k]) => num((s[k] || [])[i]));
-        const extra = def.total ? [vals.reduce((a, b) => a + (b || 0), 0)] : [];
+        const extra = def.total ? [vals.every(v => v === null) ? null : vals.reduce((a, b) => a + (b || 0), 0)] : [];
         linhas.push([rotuloCamada, String(rid), r.nome].concat(tempo, vals, extra));
       }
     }
@@ -269,7 +269,9 @@
     for (const a of arquivos) {
       const nome = enc.encode(a.nome);
       const corpo = enc.encode(a.texto);
-      const dados = a.bom ? new Uint8Array([0xEF, 0xBB, 0xBF, ...corpo]) : corpo;
+      const dados = new Uint8Array(corpo.length + (a.bom ? 3 : 0));
+      if (a.bom) dados.set([0xEF, 0xBB, 0xBF]);
+      dados.set(corpo, a.bom ? 3 : 0);
       const crc = crc32(dados);
       const loc = new DataView(new ArrayBuffer(30));
       loc.setUint32(0, 0x04034b50, true); loc.setUint16(4, 20, true); loc.setUint16(6, 0x0800, true);
@@ -344,7 +346,9 @@
   }
 
   // features: GeoJSON; op: { cor(rid) -> cor, destaque?: rid, largura, altura, limites?, linha?, fundo? }
+  let contadorMapa = 0;
   function mapaSVG(features, op) {
+    const idQuadro = 'quadro-' + (++contadorMapa);
     const [x0, y0, x1, y1] = op.limites || caixa(features);
     const k = Math.cos(((y0 + y1) / 2) * Math.PI / 180);
     const larg = (x1 - x0) * k || 1, alt = (y1 - y0) || 1;
@@ -365,8 +369,8 @@
     }
     const fundo = op.fundo ? `<rect width="${op.largura}" height="${op.altura}" fill="${op.fundo}"/>` : '';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${op.largura} ${op.altura}" width="100%">` +
-      `<clipPath id="quadro"><rect width="${op.largura}" height="${op.altura}"/></clipPath>` +
-      `<g clip-path="url(#quadro)">${fundo}${corpo}${contorno}</g></svg>`;
+      `<clipPath id="${idQuadro}"><rect width="${op.largura}" height="${op.altura}"/></clipPath>` +
+      `<g clip-path="url(#${idQuadro})">${fundo}${corpo}${contorno}</g></svg>`;
   }
 
   FEFDownload.caixa = caixa;
