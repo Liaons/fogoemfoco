@@ -61,8 +61,12 @@ O GitHub Pages aplica gzip sozinho. TopoJSON compartilha as fronteiras entre pol
 | `aq_media`, `aq_dp` | média e desvio padrão anuais da série |
 | `aq_anom_pct`, `aq_anom_dp` | anomalia contra a média, em % e em desvios padrão |
 | `mes_pico` | mês do pico da anomalia |
-| `n_incendios`, `tam_max`, `taxa_max` | métricas do GFA no período corrente |
-| `*_ranque` | posição histórica de cada métrica do GFA |
+| `n_incendios`, `tam_max`, `taxa_max`, `tam_p95`, `taxa_p95` | as cinco métricas do GFA no período corrente |
+| `<métrica>_ranque`, `_media`, `_dp`, `_anom_pct`, `_anom_dp` | posição histórica, média e desvio padrão anuais (2002-03 a 2024-25) e anomalia em % e em desvios padrão |
+| `focos`, `focos_ranque` | focos de calor no período e posição na série de 24 anos; 1 é o ano com mais focos. Nulo quando a feição não está na tabela de focos (ela só lista quem teve ao menos um foco). Com zero focos, o ranque é nulo. Não existe nos assentamentos |
+| `t_periodo`, `t_dif` | temperatura média de março a fevereiro (°C) e diferença em relação à média 2003-2024 (°C). Nulo nos municípios até chegar o arquivo mensal completo |
+| `p_periodo`, `p_dif_pct` | precipitação acumulada (mm) e diferença em relação à média 2003-2024 (%) |
+| `eventos`, `ev_dur_media`, `ev_dur_max` | eventos de fogo do INPE em 2025 (centroide no recorte; nas UCs sobrepostas conta para todas), duração média sem os eventos acima do percentil 99 do país (nula com menos de 5 eventos) e duração máxima, em dias |
 | `sem_dado_aq` | verdadeiro quando a feição não aparece na tabela de ranque |
 
 ## Cuidados na hora de desenhar o mapa
@@ -71,7 +75,9 @@ O GitHub Pages aplica gzip sozinho. TopoJSON compartilha as fronteiras entre pol
 
 **Só há cobertura florestal.** Os CSVs recebidos são todos `*_Forest.csv`, ou seja, área queimada em pixels com pelo menos 30% de cobertura arbórea. Não é a área queimada total. A legenda tem que dizer isso, ou o número será lido como se fosse o total. Pendente de confirmação com a Débora.
 
-**O período vai de março a fevereiro.** As séries de clima seguem a mesma janela: o primeiro valor do vetor é março, o último é fevereiro. A média histórica é de 2003 a 2023.
+**O período vai de março a fevereiro.** As séries de clima seguem a mesma janela: o primeiro valor do vetor é março, o último é fevereiro. A média histórica é de 2003 a 2024, a mesma do relatório. As séries trazem também `t_min`/`t_max` e as médias históricas delas. A série municipal de clima ainda é a versão anterior (média 2003-2023, sem mínima e máxima): o arquivo novo chegou cortado em 2010.
+
+**Eventos de fogo** (`series/eventos/`): por recorte, eventos por mês de início (janeiro a dezembro de 2025) e tipo (queimada, possível incêndio, incêndio, atividade antrópica).
 
 **As geometrias estão simplificadas** entre 1% e 4% dos vértices, com `keep-shapes`. Servem para exibição em tela, não para cálculo de área. Qualquer número de área vem das tabelas, nunca da geometria.
 

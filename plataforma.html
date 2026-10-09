@@ -15,8 +15,8 @@
 </script>
 <link rel="stylesheet" href="assets/fontes/fontes.css?v=7b741297">
 <link rel="stylesheet" href="assets/leaflet.min.css?v=a5aec224">
-<link rel="stylesheet" href="assets/identidade.css?v=832d3ad7">
-<link rel="stylesheet" href="assets/plataforma.css?v=f1a55058">
+<link rel="stylesheet" href="assets/identidade.css?v=43343822">
+<link rel="stylesheet" href="assets/plataforma.css?v=ca5a03fa">
 </head>
 <body>
 <div class="app">
@@ -35,22 +35,6 @@
 
     <aside class="controles">
       <div class="bloco">
-        <h2>Recorte territorial</h2>
-        <div class="opcoes" id="camadas"></div>
-      </div>
-
-      <div class="bloco" id="bloco-filtro" hidden>
-        <h2>Filtrar e buscar</h2>
-        <div class="dupla">
-          <select class="campo" id="filtro-uf" aria-label="Filtrar por estado"></select>
-          <input class="campo" id="busca" type="search" placeholder="Buscar pelo nome…"
-                 aria-label="Buscar pelo nome" autocomplete="off">
-        </div>
-        <div class="achados" id="achados"></div>
-        <p class="ajuda" id="ajuda-filtro"></p>
-      </div>
-
-      <div class="bloco">
         <h2>Variável</h2>
         <div class="opcoes" id="variaveis"></div>
       </div>
@@ -59,6 +43,25 @@
 
     <div class="envolve-mapa">
       <div id="mapa"></div>
+      <div class="alca esq" data-lado="esq" title="Arraste para alargar ou estreitar a barra"></div>
+      <div class="alca dir" data-lado="dir" title="Arraste para alargar ou estreitar o painel"></div>
+      <button class="aba esq" type="button" data-lado="esq" aria-label="Recolher a barra de variáveis" title="Recolher a barra"></button>
+      <button class="aba dir" type="button" data-lado="dir" aria-label="Recolher o painel de detalhes" title="Recolher o painel"></button>
+      <details class="legenda flutua-camadas" id="painel-camadas" open>
+        <summary>Recorte territorial</summary>
+        <div class="corpo">
+          <div class="radios" id="camadas" role="radiogroup" aria-label="Recorte territorial"></div>
+          <div id="bloco-filtro" hidden>
+            <select class="campo" id="filtro-uf" aria-label="Filtrar por estado"></select>
+            <p class="ajuda" id="ajuda-filtro"></p>
+          </div>
+        </div>
+      </details>
+      <div class="busca-mapa">
+        <input class="campo" id="busca" type="search" placeholder="Buscar pelo nome…"
+               aria-label="Buscar pelo nome" autocomplete="off">
+        <div class="achados" id="achados"></div>
+      </div>
       <details class="legenda" id="legenda" open>
         <summary>Legenda</summary>
         <div class="corpo" id="legenda-corpo"></div>
@@ -68,7 +71,7 @@
 
     <aside class="painel" id="painel">
       <div class="vazio">Clique em qualquer área do mapa para ver a série histórica,
-      a anomalia climática do ano e as métricas de comportamento do fogo.</div>
+      a anomalia climática do ano e as métricas de fogo.</div>
     </aside>
 
   </div>
@@ -78,6 +81,6 @@
 <script src="assets/topojson.min.js?v=9b737e03"></script>
 <script src="assets/chart.umd.min.js?v=49aef4c2"></script>
 <script src="assets/tema.js?v=6d5e7a29"></script>
-<script src="assets/plataforma.js?v=26a80ac1"></script>
+<script src="assets/plataforma.js?v=3bbf6eba"></script>
 </body>
 </html>
