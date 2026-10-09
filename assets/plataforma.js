@@ -540,6 +540,8 @@ function render(reg, sgfa, sclima, seventos) {
         ${reg.estado_dado === 'ok' && reg.mes_pico ? `<div class="largo"><b><i class="amostra" style="background:${
           corMes(reg.mes_pico)}"></i>${MESES_EXTENSO[reg.mes_pico - 1]}</b><small>mês do pico da anomalia de área queimada</small></div>` : ''}
       </div>
+      <p class="nota">Toda a área queimada aqui se restringe a áreas com pelo menos 30% de cobertura
+      de vegetação.</p>
     </div>
     <div class="bloco" id="bloco-gfa">${blocoGfa(reg)}</div>
     ${reg.focos_ranque !== undefined ? `
@@ -567,10 +569,7 @@ function render(reg, sgfa, sclima, seventos) {
       <div class="grafico"><canvas id="g-chuva"></canvas></div>
       <div class="grafico grafico-dif"><canvas id="g-chuva-dif"></canvas></div>
     </div>
-    <div class="bloco">
-      <p class="nota">Toda a área queimada aqui se refere a vegetação com pelo menos
-      30% de cobertura arbórea. Não é a área queimada total.</p>
-    </div>`;
+    `;
 
   estado.sgfa = sgfa;
   estado.regAberto = reg;
