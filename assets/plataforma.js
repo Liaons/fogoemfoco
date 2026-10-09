@@ -735,10 +735,10 @@ function blocoEventos(reg, s) {
       <div class="numeros-sel">
         <div><b>${nf(reg.eventos)}</b><small>número de eventos</small></div>
         <div><b>${reg.ev_ranque ? reg.ev_ranque + 'º' : '—'}</b>
-             <small>ranque espacial de eventos para ${ev.ano || 2025}, entre ${nf(comRanqueEspacial('ev_ranque'))} ${rotuloCamada()}</small></div>
+             <small>ranque espacial de eventos para ${ev.ano || 2025}</small></div>
         <div><b>${nf(reg.ev_frentes)}</b><small>número de frentes</small></div>
         <div><b>${reg.ev_frentes_ranque ? reg.ev_frentes_ranque + 'º' : '—'}</b>
-             <small>ranque espacial de frentes para ${ev.ano || 2025}, entre ${nf(comRanqueEspacial('ev_frentes_ranque'))} ${rotuloCamada()}</small></div>
+             <small>ranque espacial de frentes para ${ev.ano || 2025}</small></div>
         <div class="largo"><b>${reg.ev_dur_media === null || reg.ev_dur_media === undefined ? '—' : nf(reg.ev_dur_media, 1) + ' dias'}</b>
              <small>duração média dos eventos, sem os extremos</small></div>
       </div>
@@ -753,12 +753,6 @@ function blocoEventos(reg, s) {
       de ${ev.min_eventos || 5} eventos.</p>
     </div>`;
 }
-
-// Quantas areas da camada aberta tem o ranque espacial (o denominador da posicao).
-function comRanqueEspacial(id) {
-  return Object.values(estado.atributos[estado.camada] || {}).filter(r => r[id]).length;
-}
-const rotuloCamada = () => (CAMADAS.find(c => c.id === estado.camada) || {}).rotulo.toLowerCase();
 
 function grafEventos(s, alvo) {
   const base = baseGraf();
