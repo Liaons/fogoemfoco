@@ -170,3 +170,21 @@ teste('zip: BOM opcional no inicio do texto', () => {
   const v = new DataView(z.buffer);
   igual(v.getUint32(18, true), 4, 'BOM (3 bytes) + x');
 });
+
+teste('nome: recortes e abrangencia sem acento', () => {
+  igual(D.nomeBase(['UF', 'Municipios'], { tipo: 'uf', uf: 'BA' }), 'fogo-em-foco_2025-26_estados-municipios_BA');
+  igual(D.nomeBase(['UCs'], { tipo: 'brasil' }), 'fogo-em-foco_2025-26_ucs_brasil');
+  igual(D.nomeBase(['Municipios'], { tipo: 'area', nome: 'São Félix do Xingu' }), 'fogo-em-foco_2025-26_municipios_sao-felix-do-xingu');
+});
+
+teste('previa: linhas, colunas e tamanho aproximado', () => {
+  const p = D.previa([{ feicoes: [['1', {}], ['2', {}]] }, { feicoes: [['3', {}]] }], ['aq', 'focos']);
+  igual([p.linhas, p.colunas], [3, 7]);
+  verdadeiro(p.bytes > 0);
+});
+
+teste('tamanho legivel', () => {
+  igual(D.tamanhoLegivel(900), '1 KB');
+  igual(D.tamanhoLegivel(42 * 1024), '42 KB');
+  igual(D.tamanhoLegivel(3.4 * 1024 * 1024), '3,4 MB');
+});

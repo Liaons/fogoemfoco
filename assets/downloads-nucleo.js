@@ -299,4 +299,33 @@
 
   FEFDownload.crc32 = crc32;
   FEFDownload.zipar = zipar;
+  const SLUG_CAMADA = { UF: 'estados', Municipios: 'municipios', Biomas: 'biomas', UCs: 'ucs', TerrasIndigenas: 'tis' };
+
+  function slug(s) {
+    return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function nomeBase(camadas, abrangencia) {
+    const onde = abrangencia.tipo === 'uf' ? abrangencia.uf
+      : abrangencia.tipo === 'area' ? slug(abrangencia.nome || 'area') : 'brasil';
+    return 'fogo-em-foco_2025-26_' + camadas.map(c => SLUG_CAMADA[c] || slug(c)).join('-') + '_' + onde;
+  }
+
+  // Estimativa simples: ~9 bytes por celula numerica, ~40 pelas colunas de identificacao.
+  function previa(grupos, campos) {
+    const linhas = grupos.reduce((s, g) => s + g.feicoes.length, 0);
+    const colunas = ID_COLUNAS.length + CAMPOS.filter(c => campos.includes(c.id)).length;
+    return { linhas, colunas, bytes: linhas * (40 + 9 * (colunas - ID_COLUNAS.length)) };
+  }
+
+  function tamanhoLegivel(b) {
+    if (b < 1024 * 1024) return Math.max(1, Math.round(b / 1024)) + ' KB';
+    return (b / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB';
+  }
+
+  FEFDownload.slug = slug;
+  FEFDownload.nomeBase = nomeBase;
+  FEFDownload.previa = previa;
+  FEFDownload.tamanhoLegivel = tamanhoLegivel;
 })();
