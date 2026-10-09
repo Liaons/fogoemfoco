@@ -99,7 +99,7 @@ a{color:inherit;text-decoration:none}
 .num.ok .barra::after{transform:scaleX(1)}
 .num b i{font-style:normal}
 .num b small{font-size:.42em;color:var(--suave);font-weight:600;margin-left:.15em}
-.nota-num{margin-top:44px;font-size:13.5px;color:var(--suave-claro);max-width:70ch}
+.nota-num{margin-top:44px;font-size:13.5px;color:var(--suave-claro)}
 
 /* seção clara */
 .claro{background:var(--creme);color:#14162c}
@@ -162,33 +162,30 @@ a{color:inherit;text-decoration:none}
 .lista-num em{font-style:normal;color:var(--suave);font-size:15px;font-variant-numeric:tabular-nums}
 
 /* quem realiza: branco em repouso; ao passar o mouse a logo volta a cor original
-   sobre uma placa creme, porque BRASA e TREES tem arte escura e sumiriam no fundo. */
-.logos{display:flex;flex-wrap:wrap;align-items:center;gap:clamp(30px,4vw,56px);margin-top:46px}
-.inst{position:relative;display:inline-flex;align-items:center;height:52px;line-height:0;
-      padding:17px 20px;margin:-17px -20px;
-      transition:transform .35s cubic-bezier(.2,.7,.2,1)}
-.inst::before{content:'';position:absolute;inset:0;border-radius:16px;background:var(--creme);
-              opacity:0;transition:opacity .35s}
-.inst img{position:relative;height:52px;width:auto;display:block;transition:opacity .35s}
-.inst .cor{position:absolute;left:20px;top:17px;opacity:0}
+   sobre uma placa creme, porque BRASA e TREES tem arte escura e sumiriam no fundo.
+   Todas as placas tem o mesmo tamanho, e as duas versoes da logo ocupam a mesma
+   celula da grade: a troca nao mexe em nada em volta. */
+.logos{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:46px}
+.inst{position:relative;display:grid;place-items:center;width:176px;height:92px;padding:14px 18px;
+      border-radius:16px;transition:transform .35s cubic-bezier(.2,.7,.2,1),background .35s}
+.inst img{grid-area:1/1;max-width:100%;max-height:52px;width:auto;height:auto;display:block;transition:opacity .35s}
+.inst.inpe img{max-height:62px} .inst.ligabom img{max-height:64px} .inst.trees img{max-height:44px}
+.inst .cor{opacity:0}
 .inst .neg{opacity:.88;filter:brightness(0) invert(1)}
 .inst.crua .neg{filter:none}
-.inst:hover{transform:translateY(-3px)}
-.inst:hover::before{opacity:1}
+.inst:hover{transform:translateY(-3px);background:var(--creme)}
 .inst:hover .neg{opacity:0}
 .inst:hover .cor{opacity:1}
-.inst.inpe img{height:62px} .inst.ligabom img{height:74px} .inst.trees img{height:44px}
-.inst.inpe{height:62px} .inst.ligabom{height:74px} .inst.trees{height:44px}
 @media(max-width:700px){
-  .inst{height:38px;padding:10px 13px;margin:-10px -13px}
-  .inst img{height:38px} .inst .cor{left:13px;top:10px}
-  .inst.inpe img,.inst.inpe{height:46px} .inst.ligabom img,.inst.ligabom{height:54px}
-  .inst.trees img,.inst.trees{height:32px}}
-@media(prefers-reduced-motion:reduce){.inst,.inst img,.inst::before{transition:none}.inst:hover{transform:none}}
+  .logos{gap:8px}
+  .inst{width:132px;height:72px;padding:10px 13px}
+  .inst img{max-height:38px} .inst.inpe img{max-height:46px} .inst.ligabom img{max-height:50px}
+  .inst.trees img{max-height:32px}}
+@media(prefers-reduced-motion:reduce){.inst,.inst img{transition:none}.inst:hover{transform:none}}
 
 /* rodapé */
 .rodape{padding:110px 0 50px;border-top:1px solid var(--borda)}
-.rodape-topo{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-end;justify-content:space-between}
+.rodape-topo{display:flex;flex-wrap:wrap;gap:22px 40px;align-items:center}
 .rodape h2{font-size:clamp(38px,5.4vw,72px);max-width:16ch}
 .colunas-rodape{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:56px;margin-top:84px;
                  padding-top:52px;border-top:1px solid var(--borda)}
@@ -267,10 +264,10 @@ a{color:inherit;text-decoration:none}
 <section class="numeros">
   <div class="env">
     <div class="grade-num">
-      <div class="num rev"><b data-conta="17.803">0</b><span>km² de vegetação queimada no período</span><div class="barra"></div></div>
+      <div class="num rev"><b data-conta="17.803">0</b><span>km² de área de vegetação queimada no período</span><div class="barra"></div></div>
       <div class="num rev"><b data-conta="21.070">0</b><span>incêndios individuais mapeados pelo Global Fire Atlas</span><div class="barra"></div></div>
       <div class="num rev"><b data-conta="131.435">0</b><span>focos de calor detectados pelo INPE no período</span><div class="barra"></div></div>
-      <div class="num rev"><b data-conta="419.953">0</b><span>eventos de fogo monitorados pelo INPE em 2025</span><div class="barra"></div></div>
+      <div class="num rev"><b><i data-conta="1,7">0</i><small>dias</small></b><span>duração média dos eventos de fogo do INPE em 2025</span><div class="barra"></div></div>
       <div class="num rev"><b data-conta="2.138">0</b><span>municípios com área queimada entre os cinco piores anos da série</span><div class="barra"></div></div>
       <div class="num rev"><b data-conta="1.033">0</b><span>unidades de conservação e terras indígenas entre os cinco piores anos</span><div class="barra"></div></div>
       <div class="num rev"><b><i data-conta="18">0</i><small>de 27</small></b><span>estados mais quentes que a média de 2003-2024</span><div class="barra"></div></div>
@@ -318,7 +315,7 @@ a{color:inherit;text-decoration:none}
   <div class="env">
     <div class="rev">
       <div class="rotulo">Recortes</div>
-      <h2 class="titulo">Cinco recortes territoriais,<br>o mesmo panorama</h2>
+      <h2 class="titulo" style="max-width:none;font-size:clamp(34px,4.4vw,64px)">Cinco recortes territoriais, o mesmo panorama</h2>
       <p class="intro">Área queimada, métricas dos incêndios, focos de calor, eventos de fogo e
       clima para cada unidade, do estado à terra indígena.</p>
     </div>
@@ -377,7 +374,7 @@ a{color:inherit;text-decoration:none}
       </span>
       <span class="inst trees">
         <img class="neg" src="img/logos/logo_trees.svg" alt="TREES">
-        <img class="cor" src="img/logos/logo_trees.svg" alt="" aria-hidden="true">
+        <img class="cor" src="img/logos/logo_trees_claro.svg" alt="" aria-hidden="true">
       </span>
     </div>
   </div>
@@ -437,11 +434,14 @@ const contador = new IntersectionObserver((entradas) => {
   for (const e of entradas) {
     if (!e.isIntersecting) continue;
     const el = e.target.querySelector('[data-conta]');
-    const alvo = parseInt(el.dataset.conta.replace(/\./g, ''), 10);
+    const bruto = el.dataset.conta.replace(/\./g, '');
+    const casas = (bruto.split(',')[1] || '').length;
+    const alvo = parseFloat(bruto.replace(',', '.'));
+    const fmt = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
     const t0 = performance.now(), dur = 1300;
     const passo = (t) => {
       const p = Math.min(1, (t - t0) / dur);
-      el.textContent = fmt.format(Math.round(alvo * (1 - Math.pow(1 - p, 3))));
+      el.textContent = fmt.format(alvo * (1 - Math.pow(1 - p, 3)));
       if (p < 1) requestAnimationFrame(passo);
     };
     requestAnimationFrame(passo);
