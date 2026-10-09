@@ -145,4 +145,64 @@
   FEFDownload.ID_COLUNAS = ID_COLUNAS;
   FEFDownload.filtrarFeicoes = filtrarFeicoes;
   FEFDownload.montarTabela = montarTabela;
+  const CITACAO = 'Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026. ' +
+    'Rede Brasa de Pesquisa. – São José dos Campos: INPE, 2025.';
+
+  const ID_DESC = {
+    camada: ['recorte territorial (Estados, Municípios, Biomas, Unidades de conservação, Terras indígenas)', ''],
+    region_id: ['identificador único da feição em todas as camadas', ''],
+    codigo: ['código oficial da fonte (IBGE, CNUC, FUNAI)', ''],
+    nome: ['nome da feição', ''],
+    uf: ['sigla do estado; nas UCs e TIs em mais de um estado, o primeiro; vazio nos biomas', ''],
+  };
+
+  function quandoVazio(c) {
+    if (c.bloco === 'clima') return 'sem série de clima atualizada (biomas não têm clima; municípios aguardam o arquivo novo)';
+    if (c.bloco === 'focos' || c.id === 'focos_ranque') return 'sem foco de calor no período';
+    if (c.bloco === 'eventos') return c.id === 'ev_dur_media' ? 'menos de 5 eventos ou nenhum evento' : 'nenhum evento em 2025';
+    if (c.bloco === 'gfa' || /^(n_incendios|tam_|taxa_)/.test(c.id)) return 'sem incêndio no período ou sem média na série';
+    return 'sem área queimada na série ou fora do processamento (nulo não é zero)';
+  }
+
+  function dicionario(campos) {
+    const escolhidos = CAMPOS.filter(c => campos.includes(c.id));
+    const linhas = ID_COLUNAS.map(k => [k, ID_DESC[k][0], ID_DESC[k][1], 'identificação', '', ''])
+      .concat(escolhidos.map(c => [c.coluna, c.rotulo + ' — ' + c.descricao, c.unidade,
+        BLOCOS.find(b => b.id === c.bloco).rotulo, c.fonte, quandoVazio(c)]));
+    return { colunas: ['coluna', 'descricao', 'unidade', 'bloco', 'fonte', 'quando_vazio'], linhas };
+  }
+
+  function textoLeia(o) {
+    return [
+      'Fogo em Foco 2025-2026 — dados baixados da plataforma',
+      '',
+      'Período: março de 2025 a fevereiro de 2026 (eventos de fogo: janeiro a dezembro de 2025).',
+      'Gerado em ' + o.geradoEm + '.',
+      '',
+      'Arquivos',
+      '- tabela principal (.csv): uma linha por área, com as variáveis escolhidas.',
+      '- dicionario.csv: o que é cada coluna, unidade, fonte e o que significa célula vazia.',
+      '- series_*.csv (se pedidas): séries em formato longo, uma linha por área e por ano ou mês.',
+      '',
+      'Formato: CSV com separador vírgula, ponto decimal e codificação UTF-8.',
+      'Célula vazia significa dado ausente, nunca zero.',
+      '',
+      'Como abrir no Excel em português: Dados > Obter dados > De texto/CSV, escolher',
+      'delimitador "Vírgula" e, em Transformar dados, a localidade "Inglês (Estados Unidos)"',
+      'para os números com ponto decimal.',
+      '',
+      'Fontes: MODIS MCD64A1 (área queimada em vegetação com pelo menos 30% de cobertura',
+      'arbórea); Global Fire Atlas; INPE (focos de calor e eventos de fogo); ERA5 (clima,',
+      'média histórica de 2003-2024). Ranque: posição do período na série de 24 períodos,',
+      '1 = maior registro desde 2002.',
+      '',
+      'Como citar:',
+      CITACAO,
+      '',
+    ].join('\r\n');
+  }
+
+  FEFDownload.CITACAO = CITACAO;
+  FEFDownload.dicionario = dicionario;
+  FEFDownload.textoLeia = textoLeia;
 })();

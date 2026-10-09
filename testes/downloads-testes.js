@@ -97,3 +97,23 @@ teste('tabela: varias camadas empilhadas, campos na ordem do catalogo', () => {
   igual(t.colunas.slice(5), ['ranque_area_queimada', 'aq_km2']);
   igual(t.linhas.map(l => l[0] + ':' + l[3]), ['Estados:Bahia', 'Municípios:Barra']);
 });
+
+teste('dicionario: uma linha por coluna, com as de identificacao', () => {
+  const d = D.dicionario(['aq', 'focos']);
+  igual(d.colunas, ['coluna', 'descricao', 'unidade', 'bloco', 'fonte', 'quando_vazio']);
+  igual(d.linhas.map(l => l[0]), ['camada', 'region_id', 'codigo', 'nome', 'uf', 'aq_km2', 'focos']);
+  verdadeiro(d.linhas[6][5].length > 0, 'focos explica o vazio');
+});
+
+teste('dicionario: clima avisa que biomas nao tem dado', () => {
+  const d = D.dicionario(['t_dif']);
+  verdadeiro(/bioma/i.test(d.linhas[5][5]));
+});
+
+teste('LEIA: periodo, citacao e como abrir no Excel', () => {
+  const t = D.textoLeia({ geradoEm: '09/10/2026' });
+  verdadeiro(t.includes('março de 2025 a fevereiro de 2026'));
+  verdadeiro(t.includes('Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026'));
+  verdadeiro(/Excel/.test(t));
+  verdadeiro(t.includes('09/10/2026'));
+});
