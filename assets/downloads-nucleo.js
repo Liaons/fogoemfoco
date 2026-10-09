@@ -205,4 +205,41 @@
   FEFDownload.CITACAO = CITACAO;
   FEFDownload.dicionario = dicionario;
   FEFDownload.textoLeia = textoLeia;
+  const SERIE_COLUNAS = {
+    gfa: { tempo: ['ano_inicio'], campos: [['n_incendios', 'n_incendios'], ['tam_max', 'tam_max'], ['taxa_max', 'taxa_max'],
+                                          ['tam_p95', 'tam_p95'], ['taxa_p95', 'taxa_p95']] },
+    clima: { tempo: ['ano', 'mes'], campos: [['t', 't_media_c'], ['t_media', 't_media_hist_c'], ['t_min', 't_min_c'],
+      ['t_min_media', 't_min_hist_c'], ['t_max', 't_max_c'], ['t_max_media', 't_max_hist_c'],
+      ['p', 'precipitacao_mm'], ['p_media', 'precipitacao_hist_mm']] },
+    eventos: { tempo: ['ano', 'mes'], campos: [['queimada', 'queimada'], ['possivel_incendio', 'possivel_incendio'],
+      ['incendio', 'incendio'], ['atividade_antropica', 'atividade_antropica']], total: 'total' },
+  };
+  // Clima: marco do ano inicial a fevereiro do seguinte. Eventos: janeiro a dezembro de 2025.
+  const MESES_CLIMA = [[2025, 3], [2025, 4], [2025, 5], [2025, 6], [2025, 7], [2025, 8], [2025, 9],
+                       [2025, 10], [2025, 11], [2025, 12], [2026, 1], [2026, 2]];
+
+  function num(v) {
+    return v === null || v === undefined || !Number.isFinite(v) ? null : v;
+  }
+
+  // tipo: 'gfa' | 'clima' | 'eventos'; series: { rid: objeto da serie }
+  function seriesLongas(tipo, rotuloCamada, feicoes, series) {
+    const def = SERIE_COLUNAS[tipo];
+    const colunas = ['camada', 'region_id', 'nome'].concat(def.tempo, def.campos.map(c => c[1]), def.total ? [def.total] : []);
+    const linhas = [];
+    for (const [rid, r] of feicoes) {
+      const s = series[rid];
+      if (!s) continue;
+      const n = tipo === 'gfa' ? (s.ano || []).length : 12;
+      for (let i = 0; i < n; i++) {
+        const tempo = tipo === 'gfa' ? [s.ano[i]] : (tipo === 'clima' ? MESES_CLIMA[i] : [2025, i + 1]);
+        const vals = def.campos.map(([k]) => num((s[k] || [])[i]));
+        const extra = def.total ? [vals.reduce((a, b) => a + (b || 0), 0)] : [];
+        linhas.push([rotuloCamada, String(rid), r.nome].concat(tempo, vals, extra));
+      }
+    }
+    return { colunas, linhas };
+  }
+
+  FEFDownload.seriesLongas = seriesLongas;
 })();

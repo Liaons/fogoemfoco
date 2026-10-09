@@ -117,3 +117,33 @@ teste('LEIA: periodo, citacao e como abrir no Excel', () => {
   verdadeiro(/Excel/.test(t));
   verdadeiro(t.includes('09/10/2026'));
 });
+
+const FEIC = [['60000025', { nome: 'Bahia', uf: 'BA' }]];
+
+teste('series GFA: uma linha por area e ano', () => {
+  const t = D.seriesLongas('gfa', 'Estados', FEIC, { '60000025': { ano: [2024, 2025], n_incendios: [800, 1289],
+    tam_max: [100, 518], taxa_max: [10, 33.8], tam_p95: [12, 30.4], taxa_p95: [1.5, 3.03] } });
+  igual(t.colunas, ['camada', 'region_id', 'nome', 'ano_inicio', 'n_incendios', 'tam_max', 'taxa_max', 'tam_p95', 'taxa_p95']);
+  igual(t.linhas[1], ['Estados', '60000025', 'Bahia', 2025, 1289, 518, 33.8, 30.4, 3.03]);
+});
+
+teste('series clima: 12 meses de marco a fevereiro, campos ausentes vazios', () => {
+  const v = (x) => Array(12).fill(x);
+  const t = D.seriesLongas('clima', 'Estados', FEIC, { '60000025': { t: v(25), t_media: v(24.5), p: v(30), p_media: v(60) } });
+  igual(t.linhas.length, 12);
+  igual(t.linhas[0].slice(3, 5), [2025, 3]);
+  igual(t.linhas[11].slice(3, 5), [2026, 2]);
+  igual(t.colunas.indexOf('t_min_c') > 0, true);
+  igual(t.linhas[0][t.colunas.indexOf('t_min_c')], null);
+});
+
+teste('series eventos: 12 meses de 2025 por tipo', () => {
+  const t = D.seriesLongas('eventos', 'Estados', FEIC, { '60000025': { queimada: Array(12).fill(1),
+    possivel_incendio: Array(12).fill(2), incendio: Array(12).fill(3), atividade_antropica: Array(12).fill(4) } });
+  igual(t.linhas.length, 12);
+  igual(t.linhas[0].slice(3), [2025, 1, 1, 2, 3, 4, 10]);
+});
+
+teste('series: area sem serie fica fora', () => {
+  igual(D.seriesLongas('gfa', 'Estados', FEIC, {}).linhas.length, 0);
+});
