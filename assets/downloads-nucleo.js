@@ -89,6 +89,8 @@
     c('focos', 'focos', 'focos', 'Número de focos', 'focos', 'focos de calor no período; vazio sem foco', FONTE.focos),
 
     c('eventos', 'eventos', 'eventos', 'Número de eventos', 'eventos', 'eventos de fogo em 2025', FONTE.eventos),
+    c('ev_ranque', 'eventos', 'eventos_ranque', 'Ranque espacial dos eventos', 'posição',
+      'posição entre todas as áreas da mesma camada no país em número de eventos de fogo em 2025 (1 = mais eventos); não é um ranque na série histórica', FONTE.eventos),
     c('ev_dur_media', 'eventos', 'eventos_duracao_media_dias', 'Duração média', 'dias',
       'sem os eventos acima do percentil 99 do país; vazio com menos de 5 eventos', FONTE.eventos),
     c('ev_dur_max', 'eventos', 'eventos_duracao_max_dias', 'Duração máxima', 'dias', 'o evento mais longo', FONTE.eventos),
@@ -168,6 +170,7 @@
     if (c.bloco === 'clima') return 'sem série de clima (os biomas não têm clima)';
     if (c.bloco === 'focos' || c.id === 'focos_ranque') return 'sem foco de calor no período';
     if (c.id === 'eventos') return 'nunca vazio: 0 quando não há evento em 2025';
+    if (c.id === 'ev_ranque' || c.id === 'ev_frentes_ranque') return 'nenhum evento em 2025, ou área fora da tabela de eventos de 2025';
     if (c.id === 'ev_frentes') return '0 quando não há evento; vazio quando há evento sem linha na tabela de frentes';
     if (c.bloco === 'eventos') return c.id === 'ev_dur_media' ? 'menos de 5 eventos ou nenhum evento' : 'nenhum evento em 2025';
     if (c.bloco === 'gfa' || /^(n_incendios|tam_|taxa_)/.test(c.id)) return 'sem incêndio no período ou sem média na série';
