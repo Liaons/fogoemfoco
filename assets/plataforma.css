@@ -7,7 +7,7 @@ body {
 h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; line-height: 1.1; letter-spacing: .005em; }
 button, input { font: inherit; color: inherit; }
 
-.app { display: grid; grid-template-rows: 64px 1fr; height: 100vh; }
+.app { display: grid; grid-template-rows: 64px 1fr; height: 100vh; height: 100dvh; }
 
 /* topo: mesma tinta, mesma logo e mesmo botao-pilula da homepage */
 .barra {
@@ -30,7 +30,7 @@ button, input { font: inherit; color: inherit; }
 .barra a.voltar:hover { background: var(--laranja); border-color: var(--laranja); }
 .barra .tema { border-color: rgba(255,255,255,.18); color: var(--sobre-escuro); }
 .barra .tema:hover { background: rgba(255,255,255,.12); }
-@media (max-width: 720px) { .barra .periodo { display: none; } }
+@media (max-width: 820px) { .barra .periodo { display: none; } }
 
 /* corpo */
 .corpo {
@@ -42,8 +42,8 @@ button, input { font: inherit; color: inherit; }
 .corpo.dir-fechada { --larg-dir: 0px !important; }
 .corpo.esq-fechada > .controles, .corpo.dir-fechada > .painel { visibility: hidden; border: 0; }
 .corpo.arrastando { transition: none; user-select: none; cursor: col-resize; }
-@media (max-width: 1180px) { .corpo { grid-template-columns: var(--larg-esq, 258px) 1fr; } .painel { display: none; } }
-@media (max-width: 820px)  { .corpo { grid-template-columns: 1fr; } .controles { display: none; } }
+@media (max-width: 1180px) { .corpo { grid-template-columns: var(--larg-esq, 258px) 1fr; } }
+@media (max-width: 820px)  { .corpo { grid-template-columns: 1fr; } }
 
 .controles, .painel {
   background: var(--superficie); overflow-y: auto; min-height: 0;
@@ -338,3 +338,71 @@ button, input { font: inherit; color: inherit; }
 @media (max-width: 820px) { .alca, .aba { display: none; } }
 
 .leaflet-tooltip.dica .dica-acao { display: block; margin-top: 3px; font-size: 10.5px; opacity: .7; }
+
+/* ---------- tablet e celular ----------
+   Ate 1180 px o painel direito sai da grade e vira uma gaveta por cima do mapa, que abre
+   ao tocar numa area. Ate 820 px a barra de variaveis tambem vira gaveta, aberta pelo
+   botao "Variaveis" do topo, e o painel sobe de baixo, deixando o mapa visivel em cima. */
+.abrir-variaveis, .fechar-painel { display: none; }
+.veu-movel { position: absolute; inset: 0; z-index: 900; background: rgba(10,12,28,.38); }
+.corpo { position: relative; }
+
+@media (max-width: 1180px) {
+  .painel {
+    position: absolute; z-index: 950; top: 0; right: 0; bottom: 0; width: min(400px, 100%);
+    transform: translateX(104%); transition: transform .28s cubic-bezier(.2,.7,.2,1);
+    box-shadow: -12px 0 30px var(--sombra);
+  }
+  .corpo.ver-dir .painel { transform: none; }
+  .fechar-painel {
+    position: absolute; z-index: 960; top: 10px; right: 12px; display: none;
+    border: 1px solid var(--borda); background: var(--superficie); color: var(--texto);
+    border-radius: 999px; padding: 6px 13px; font-size: 13px; cursor: pointer; box-shadow: 0 4px 14px var(--sombra);
+  }
+  .corpo.ver-dir .fechar-painel { display: block; }
+  .corpo.ver-dir .painel .titulo-sel { padding-right: 96px; }
+}
+
+@media (max-width: 820px) {
+  .barra { gap: 8px; padding: 0 10px; }
+  .barra .marca { min-width: 0; flex: 0 1 auto; }
+  .barra .marca img { height: 20px; max-width: 100%; }
+  .barra .tema { flex: none; }
+  .barra a.voltar { padding: 8px 11px; margin-left: 0; }
+  .barra a.voltar .rotulo { display: none; }
+  .abrir-variaveis {
+    display: inline-flex; align-items: center; gap: 7px; flex: none;
+    border: 1px solid rgba(255,255,255,.22); background: transparent; color: var(--sobre-escuro);
+    border-radius: 999px; padding: 7px 12px; font-size: 13.5px; cursor: pointer;
+  }
+  .abrir-variaveis[aria-expanded="true"] { background: var(--laranja); border-color: var(--laranja); }
+
+  /* barra de variaveis: gaveta da esquerda */
+  .controles {
+    position: absolute; z-index: 950; top: 0; left: 0; bottom: 0; width: min(330px, 88%);
+    transform: translateX(-104%); transition: transform .28s cubic-bezier(.2,.7,.2,1);
+    box-shadow: 12px 0 30px var(--sombra); border-right: 1px solid var(--borda);
+  }
+  .corpo.ver-esq .controles { transform: none; visibility: visible; }
+  .corpo.esq-fechada > .controles { visibility: visible; }
+
+  /* painel: sobe de baixo e cobre dois tercos da tela */
+  .painel {
+    top: auto; left: 0; right: 0; width: auto; height: 68%;
+    border-left: 0; border-top: 1px solid var(--borda); border-radius: 16px 16px 0 0;
+    transform: translateY(104%); box-shadow: 0 -12px 30px var(--sombra);
+  }
+  .painel::before {
+    content: ''; display: block; width: 40px; height: 4px; border-radius: 4px; margin: 8px auto 0;
+    background: color-mix(in srgb, var(--texto) 22%, transparent);
+  }
+  .corpo.ver-dir .painel { transform: none; }
+  .fechar-painel { top: auto; bottom: calc(68% - 46px); }
+
+  /* sobre o mapa: busca no alto, recorte logo abaixo, legenda compacta embaixo */
+  .busca-mapa { left: 12px; right: 12px; top: 12px; bottom: auto; width: auto; }
+  .legenda.flutua-camadas { top: 64px; left: 12px; width: auto; max-width: calc(100% - 24px); }
+  .legenda.flutua-camadas[open] { width: 228px; }
+  .legenda#legenda { left: 12px; bottom: 26px; width: min(300px, calc(100% - 24px)); }
+  .leaflet-control-zoom { display: none; }
+}

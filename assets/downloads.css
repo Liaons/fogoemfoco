@@ -5,7 +5,7 @@
   padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 600;
 }
 .barra .baixar:hover { filter: brightness(1.08); }
-@media (max-width: 720px) { .barra .periodo + .baixar { margin-left: auto; } }
+@media (max-width: 820px) { .barra .periodo + .baixar { margin-left: auto; } }
 @media (max-width: 560px) {
   .barra .baixar .rotulo { display: none; }
   .barra { gap: 12px; }

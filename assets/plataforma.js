@@ -106,13 +106,13 @@ const VARIAVEIS = [
   // ranques espaciais: a posicao entre todas as areas da camada em 2025 (1 = mais), e nao
   // na serie historica como os outros ranques; por isso tem escala propria ("posicao")
   { id: 'ev_ranque',    grupo: 'eventos', fonte: 'frentes', rotulo: 'Ranque espacial dos eventos', escala: 'posicao', paleta: 'FOCOS',
-    unidade: '', casas: 0, conta: 'eventos', destaque: 'em eventos de fogo<br>entre as áreas do país' },
+    unidade: '', casas: 0, oque: 'eventos', destaque: 'em eventos de fogo<br>entre as áreas do país' },
   { id: 'ev_dur_media', grupo: 'eventos', fonte: 'eventos', rotulo: 'Duração média dos eventos', escala: 'continua', paleta: 'DUR',
     unidade: ' dias', casas: 1, destaque: 'duração média dos eventos,<br>sem os extremos' },
   { id: 'ev_frentes',   grupo: 'eventos', fonte: 'frentes', rotulo: 'Frentes de fogo',          escala: 'continua', paleta: 'FOCOS', raiz: true,
     de1: true, unidade: '', casas: 0, destaque: `frentes de fogo<br>em 2025` },
   { id: 'ev_frentes_ranque', grupo: 'eventos', fonte: 'frentes', rotulo: 'Ranque espacial das frentes', escala: 'posicao', paleta: 'FOCOS',
-    unidade: '', casas: 0, conta: 'frentes de fogo', destaque: 'em frentes de fogo<br>entre as áreas do país' },
+    unidade: '', casas: 0, oque: 'frentes de fogo', destaque: 'em frentes de fogo<br>entre as áreas do país' },
 ];
 
 function defAtual() {
@@ -444,16 +444,45 @@ function trocarBase() {
 
 /* ---------- painel ---------- */
 
-async function selecionar(rid, comZoom) {
+// Tablet e celular: o painel e a barra de variaveis viram gavetas por cima do mapa.
+const TELA_MEDIA = matchMedia('(max-width: 1180px)');
+const TELA_PEQUENA = matchMedia('(max-width: 820px)');
+
+function gaveta(lado, aberta) {
+  const corpo = $('.corpo');
+  corpo.classList.toggle('ver-' + lado, aberta);
+  if (lado === 'esq') $('#abrir-variaveis').setAttribute('aria-expanded', String(aberta));
+  $('#veu-movel').hidden = !corpo.classList.contains('ver-esq');
+}
+
+function ligarGavetas() {
+  $('#abrir-variaveis').onclick = () => gaveta('esq', !$('.corpo').classList.contains('ver-esq'));
+  $('#fechar-painel').onclick = () => gaveta('dir', false);
+  $('#veu-movel').onclick = () => gaveta('esq', false);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('#janela-download').hidden) { gaveta('esq', false); gaveta('dir', false); }
+  });
+  // de volta a tela larga, as gavetas somem e a grade volta a valer
+  TELA_MEDIA.addEventListener('change', () => { gaveta('esq', false); gaveta('dir', false); });
+}
+
+async function selecionar(rid, comZoom, abrir = true) {
   const reg = estado.atributos[estado.camada][rid];
   if (!reg) return;
   estado.selecionado = rid;
+  if (abrir && TELA_MEDIA.matches) gaveta('dir', true);
   const gfa = await serie('gfa', estado.camada, reg.chunk || null);
   const clima = await serie('clima', estado.camada, reg.chunk || null);
   const eventos = await serie('eventos', estado.camada, reg.chunk || null);
   render(reg, gfa[rid], clima[rid], eventos[rid]);
   const layer = estado.camadasPorRid[rid];
-  if (comZoom && layer && layer.getBounds) mapa.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 9 });
+  // a gaveta cobre parte do mapa (embaixo no celular, a direita no tablet): a area fica
+  // no pedaco de mapa que continua visivel
+  const baixo = TELA_PEQUENA.matches ? Math.round(mapa.getSize().y * 0.68) : 40;
+  const direita = TELA_MEDIA.matches && !TELA_PEQUENA.matches ? $('#painel').offsetWidth + 40 : 40;
+  if (comZoom && layer && layer.getBounds) {
+    mapa.fitBounds(layer.getBounds(), { paddingTopLeft: [40, 40], paddingBottomRight: [direita, baixo], maxZoom: 9 });
+  }
   if (layer) layer.openTooltip();
 }
 
@@ -1087,7 +1116,7 @@ function legendaHTML(def, faixaAtual, regs) {
     baixo = marcas(MESES.map(m => m[0].toUpperCase()));
   } else if (def.escala === 'posicao' && faixaAtual) {
     // a esquerda o 1o lugar, como nos ranques
-    titulo = `1º – mais ${def.conta} em 2025`;
+    titulo = `1º – mais ${def.oque} em 2025`;
     faixa = `linear-gradient(90deg,${PALETAS[def.paleta].slice().reverse().join(',')})`;
     baixo = `<span class="pontas"><span>1º</span><span>${nf(faixaAtual[1])}º</span></span>`;
   } else if (faixaAtual) {
@@ -1119,7 +1148,8 @@ function montarLegenda() {
   const pc = $('#painel-camadas');
   try {
     if (localStorage.getItem('fef-camadas') === 'fechada') pc.removeAttribute('open');
-    pc.ontoggle = () => localStorage.setItem('fef-camadas', pc.open ? 'aberta' : 'fechada');
+    // no celular o menu comeca recolhido; abrir e fechar ali nao muda a escolha da tela larga
+    pc.ontoggle = () => { if (!TELA_PEQUENA.matches) localStorage.setItem('fef-camadas', pc.open ? 'aberta' : 'fechada'); };
   } catch (e) {}
 
   // A legenda lembra se o leitor a deixou recolhida.
@@ -1183,12 +1213,12 @@ function resumoCamada() {
       MESES[(+m + 9) % 12]}</span><b>${nf(n)} (${nf(n / com.length * 100, 0)}%)</b></div>`).join('');
   } else if (def.escala === 'posicao') {
     const ord = com.slice().sort(([, a], [, b]) => a[def.id] - b[def.id] || a.nome.localeCompare(b.nome, 'pt-BR'));
-    titulo1 = `Mais ${def.conta} no país`;
+    titulo1 = `Mais ${def.oque} no país`;
     lista = ord.slice(0, 5).map(linha).join('');
     extra = `<p class="nota">Ranque espacial: a posição de cada área entre todas as áreas desta camada no país, em
-      número de ${def.conta} em 2025 (1º = mais ${def.conta}). Não compara com anos anteriores, como os outros ranques.</p>`;
+      número de ${def.oque} em 2025 (1º = mais ${def.oque}). Não compara com anos anteriores, como os outros ranques.</p>`;
     if (ord.length > 5) {
-      extra += `<h2>Menos ${def.conta} (com evento)</h2><div class="lista-resumo">${ord.slice(-5).reverse().map(linha).join('')}</div>`;
+      extra += `<h2>Menos ${def.oque} (com evento)</h2><div class="lista-resumo">${ord.slice(-5).reverse().map(linha).join('')}</div>`;
     }
   } else {
     const ord = com.slice().sort(([, a], [, b]) => b[def.id] - a[def.id]);
@@ -1248,12 +1278,13 @@ async function trocarCamada(id) {
 
 function trocarVariavel(id) {
   estado.variavel = id;
+  if (TELA_PEQUENA.matches) gaveta('esq', false);   // escolheu: volta para o mapa
   calcularFaixa();
   desenhar(false);
   montarControles();
   // O painel direito precisa ser refeito, senao o numero grande do topo continua
   // mostrando a variavel anterior enquanto o mapa ja mudou.
-  if (estado.selecionado) selecionar(estado.selecionado, false);
+  if (estado.selecionado) selecionar(estado.selecionado, false, false);
   else limparPainel();
 }
 
@@ -1381,6 +1412,8 @@ async function iniciar() {
   }
 
   ligarBarras();
+  ligarGavetas();
+  if (TELA_PEQUENA.matches) $('#painel-camadas').removeAttribute('open');   // o mapa e pequeno
   // O canto superior esquerdo e do menu de recortes: o zoom vai para o direito.
   mapa = L.map('mapa', { center: [-14.5, -53], zoom: 4, preferCanvas: true, zoomControl: false });
   L.control.zoom({ position: 'topright' }).addTo(mapa);
