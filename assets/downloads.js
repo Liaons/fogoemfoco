@@ -6,12 +6,12 @@
   const D = window.FEFDownload;
   const janela = document.getElementById('janela-download');
   const conteudo = document.getElementById('conteudo-download');
-  let aba = 'csv';
+  let aba = 'ficha';
 
   function abrir() {
     janela.hidden = false;
     esc = null; fic = null; seqPrevia++;
-    trocarAba(aba);
+    trocarAba('ficha');   // sempre abre na ficha; o CSV fica na segunda aba
     document.getElementById('fechar-download').focus();
   }
 
