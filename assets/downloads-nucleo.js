@@ -32,7 +32,7 @@
     gfa: 'Global Fire Atlas (incêndios individuais derivados do MODIS)',
     focos: 'INPE, focos de calor',
     eventos: 'INPE, eventos de fogo de 2025, atribuídos pelo centroide',
-    clima: 'ERA5, média histórica de 2003-2024',
+    clima: 'temperatura ERA5, precipitação ERA5-Land; média histórica de 2003-2024',
   };
 
   const BLOCOS = [
@@ -219,7 +219,7 @@
       'para os números com ponto decimal.',
       '',
       'Fontes: MODIS MCD64A1 (área queimada em vegetação com pelo menos 30% de cobertura',
-      'arbórea); Global Fire Atlas; INPE (focos de calor e eventos de fogo); ERA5 (clima,',
+      'arbórea); Global Fire Atlas; INPE (focos de calor e eventos de fogo); ERA5 e ERA5-Land (clima,',
       'média histórica de 2003-2024). Ranque: posição do período na série de 24 períodos,',
       '1 = maior registro desde 2002.',
     ].concat(o.climaMunicipios ? [

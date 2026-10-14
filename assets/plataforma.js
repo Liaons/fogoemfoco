@@ -21,7 +21,7 @@ const DADOS = 'dados/';
 // Carimbo do conteudo de dados/, reescrito por 11_versionar_assets.py. Os JSONs e os
 // TopoJSONs sao buscados com fetch e o navegador os guarda em cache como qualquer outro
 // arquivo: sem este carimbo, trocar uma camada nao chega a quem ja visitou a pagina.
-const VERSAO_DADOS = '68dbc253';
+const VERSAO_DADOS = 'f6e16997';
 
 const CAMADAS = [
   { id: 'UF',              rotulo: 'Estados',                 geo: 'uf.json',             tipo: 'geojson',  filtravel: false },
