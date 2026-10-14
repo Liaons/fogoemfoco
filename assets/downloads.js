@@ -557,7 +557,7 @@
           <div class="blocos">${htmlNumeros(reg, anoEv)}</div></div>
         <div class="graf">${htmlGraf}</div>
         <div class="rod"><div>Fontes: área queimada MODIS MCD64A1 (vegetação com ≥30% de cobertura arbórea); Global Fire Atlas;
-          focos e eventos de fogo do INPE; clima ERA5 (média ${clima.ref}). Ranque: posição na série de 24 períodos, 1º = maior
+          focos e eventos de fogo do INPE; clima ERA5 e ERA5-Land (média ${clima.ref}). Ranque: posição na série de 24 períodos, 1º = maior
           registro desde 2002.${avisoClima && camada !== 'Biomas' && sc ? ' ' + avisoClima : ''}
           Gerado em ${new Date().toLocaleDateString('pt-BR')}.</div>
           <div class="l2"><div><b>Como citar:</b> ${D.CITACAO}</div><div class="logos">
