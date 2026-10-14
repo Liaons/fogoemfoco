@@ -121,7 +121,7 @@ claro.
 | Métricas do fogo | Global Fire Atlas | março a fevereiro, série desde 2002 |
 | Focos de calor | INPE | março a fevereiro, série de 24 períodos |
 | Eventos de fogo | INPE, atribuídos pelo centroide | ano civil de 2025 |
-| Clima | Temperatura: reanálise ERA5 (ECMWF); precipitação: ERA5-Land mensal, extraído no Google Earth Engine | março a fevereiro, média 2003-2024 |
+| Clima | Temperatura: reanálise ERA5 (ECMWF); precipitação: ERA5-Land mensal (ECMWF) | março a fevereiro, média 2003-2024 |
 
 A área queimada considera só vegetação com pelo menos 30% de cobertura arbórea. Não é a
 área queimada total.
