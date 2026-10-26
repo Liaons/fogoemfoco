@@ -119,8 +119,7 @@
       if (!p.linhas) { alvo.textContent = 'Nenhuma área nesta combinação de recorte e abrangência.'; return; }
       alvo.textContent = `${nf(p.linhas)} linhas · ${p.colunas} colunas · ~${D.tamanhoLegivel(p.bytes)}` +
         (e.series ? ' + séries' : '') +
-        (e.abrangencia === 'uf' && e.camadas.includes('Biomas') ? ' · biomas inteiros' : '') +
-        (e.abrangencia === 'uf' && e.camadas.some(c => D.SEM_UF_NEM_RANQUE.includes(c)) ? ' · UCs e TIs do país todo' : '');
+        (e.abrangencia === 'uf' && e.camadas.includes('Biomas') ? ' · biomas inteiros' : '');
       botao.disabled = false;
     } catch (err) {
       if (meu === seqPrevia) alvo.textContent = 'Não foi possível calcular a prévia: ' + err.message;
