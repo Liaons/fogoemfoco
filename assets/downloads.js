@@ -405,7 +405,8 @@
   }
 
   function htmlNumeros(reg, anoEv, comRanque = true) {
-    const aq = reg.estado_dado === 'ok'
+    // sem_area: 0 km² no periodo e anomalia de -100% sao numeros reais, sem ranque
+    const aq = reg.estado_dado === 'ok' || reg.estado_dado === 'sem_area'
       ? `<div class="nums"><div><b>${nf(reg.aq, 1)} km²</b>no período</div>
            <div><b>${reg.aq_anom_pct === null ? '—' : comSinal(reg.aq_anom_pct, 0) + '%'}</b>vs. média${reg.aq_media === null || reg.aq_media === undefined ? '' : ` (${nf(reg.aq_media, 0)} km²)`}</div>
            <div><b>${reg.aq_frac === null ? '—' : nf(reg.aq_frac * 100, 2) + '%'}</b>do território</div></div>

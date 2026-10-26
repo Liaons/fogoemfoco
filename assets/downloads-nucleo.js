@@ -103,7 +103,9 @@
   FEFDownload.CAMPOS = CAMPOS;
   const ID_COLUNAS = ['camada', 'region_id', 'codigo', 'nome', 'uf', 'situacao'];
   // Sem area queimada na serie (ou fora do processamento) nao ha anomalia nem mes de pico.
+  // Quem queimou na serie mas nao no periodo (sem_area) tem anomalia real, de -100%.
   const SO_COM_FOGO = ['mes_pico', 'aq_anom_pct', 'aq_anom_dp'];
+  const TEM_SERIE = ['ok', 'sem_area'];
 
   function primeiraUf(v) {
     return v ? String(v).split(',')[0].trim() : '';
@@ -143,7 +145,7 @@
         const ufc = g.camada === 'Biomas' ? '' : (g.camada === 'UCs' ? (r.chunk || '') : primeiraUf(r.uf));
         const linha = [g.rotulo, String(rid), r.cod == null ? '' : String(r.cod), r.nome, ufc, r.estado_dado || ''];
         for (const c of escolhidos) {
-          const v = (r.estado_dado !== 'ok' && SO_COM_FOGO.includes(c.id)) ||
+          const v = (!TEM_SERIE.includes(r.estado_dado) && SO_COM_FOGO.includes(c.id)) ||
                     (c.bloco === 'ranques' && SEM_UF_NEM_RANQUE.includes(g.camada)) ? null : r[c.id];
           linha.push(v === null || v === undefined || !Number.isFinite(v)
             ? null : (c.fator === 1 ? v : Math.round(v * c.fator * 1e6) / 1e6));
@@ -167,8 +169,9 @@
     codigo: ['código oficial da fonte (IBGE, CNUC, FUNAI)', ''],
     nome: ['nome da feição', ''],
     uf: ['sigla do estado; nas UCs e TIs em mais de um estado, o primeiro; vazio nos biomas', ''],
-    situacao: ['ok = com área queimada na série; sem_fogo = sem área queimada em 2002-2026 (0 km² é real); ' +
-               'fora = fora do processamento (vazio)', ''],
+    situacao: ['ok = com área queimada no período; sem_area = queimou na série, mas não no período ' +
+               '(0 km² é real; sem ranque nem mês de pico); sem_fogo = sem área queimada em 2002-2026 ' +
+               '(0 km² é real); fora = fora do processamento (vazio)', ''],
   };
 
   function quandoVazio(c) {
@@ -183,6 +186,7 @@
     if (c.bloco === 'eventos') return c.id === 'ev_dur_media' ? 'menos de 5 eventos ou nenhum evento' : 'nenhum evento em 2025';
     if (c.bloco === 'gfa' || /^(n_incendios|tam_|taxa_)/.test(c.id)) return 'sem incêndio no período ou sem média na série';
     if (['aq', 'aq_frac', 'aq_media', 'aq_dp'].includes(c.id)) return 'fora do processamento (situacao = fora); com situacao = sem_fogo vale 0, que é real';
+    if (c.id === 'aq_ranque' || c.id === 'mes_pico') return 'sem área queimada no período (situacao = sem_area) ou na série (sem_fogo), ou fora do processamento (nulo não é zero)';
     return 'sem área queimada na série (situacao = sem_fogo) ou fora do processamento (nulo não é zero)';
   }
 
@@ -208,9 +212,11 @@
       '',
       'Formato: CSV com separador vírgula, ponto decimal e codificação UTF-8.',
       'Célula vazia significa dado ausente, nunca zero. A coluna situacao diz o estado de',
-      'cada área: ok (com área queimada na série), sem_fogo (sem área queimada em 2002-2026:',
-      'área queimada, fração, média e desvio padrão valem 0, que é real; anomalias e mês de',
-      'pico ficam vazios) e fora (fora do processamento: área queimada vazia).',
+      'cada área: ok (com área queimada no período), sem_area (queimou na série, mas não no',
+      'período: área queimada 0, anomalia de -100%, ranque e mês de pico vazios), sem_fogo',
+      '(sem área queimada em 2002-2026: área queimada, fração, média e desvio padrão valem 0,',
+      'que é real; anomalias e mês de pico ficam vazios) e fora (fora do processamento: área',
+      'queimada vazia).',
       'O número de eventos é 0 quando não houve evento de fogo.',
       '',
       'Séries (formato longo; vazio = dado ausente):',
