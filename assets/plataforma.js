@@ -3,11 +3,8 @@
  * Le os arquivos de plataforma/dados/, gerados pelos scripts em codigos/.
  * A chave de tudo e o region_id, que a geometria guarda no campo "rid".
  *
- * Cinco estados de dado, desenhados de formas diferentes:
+ * Quatro estados de dado, desenhados de formas diferentes:
  *   ok           tem serie historica e ranque
- *   sem_area     queimou em algum ano da serie, mas nao neste periodo: sem ranque nem mes
- *                de pico (a tabela de origem empata os anos sem fogo e daria 2o, 3o...).
- *                A area (0) e a anomalia (-100%) sao reais.
  *   sem_fogo     esta na tabela, mas nunca queimou na serie. E zero de verdade.
  *   fora         foi analisado e ficou fora da tabela de ranque, provavelmente por ser
  *                menor que o pixel do sensor.
@@ -24,7 +21,7 @@ const DADOS = 'dados/';
 // Carimbo do conteudo de dados/, reescrito por 11_versionar_assets.py. Os JSONs e os
 // TopoJSONs sao buscados com fetch e o navegador os guarda em cache como qualquer outro
 // arquivo: sem este carimbo, trocar uma camada nao chega a quem ja visitou a pagina.
-const VERSAO_DADOS = '288e4207';
+const VERSAO_DADOS = 'b8018004';
 
 const CAMADAS = [
   { id: 'UF',              rotulo: 'Estados',                 geo: 'uf.json',             tipo: 'geojson',  filtravel: false },
@@ -148,7 +145,6 @@ function semDado(reg, def) {
     default:
       if (!reg || reg.estado_dado === 'fora') return ['--fora', 'fora do processamento'];
       if (reg.estado_dado === 'sem_analise') return ['--sem-analise', 'sem análise nesta edição'];
-      if (reg.estado_dado === 'sem_area' && vazio) return ['--sem-fogo', 'sem área queimada no período'];
       if (reg.estado_dado === 'sem_fogo' || vazio) return ['--sem-fogo', 'sem fogo na série'];
       return null;
   }
@@ -580,10 +576,6 @@ function render(reg, sgfa, sclima, seventos) {
     : reg.estado_dado === 'sem_fogo'
     ? `<div class="bloco"><div class="aviso-dado"><b>Sem registro de fogo em vegetação</b>
        em nenhum ano da série. Por isso não há ranque.</div></div>`
-    : reg.estado_dado === 'sem_area'
-    ? `<div class="bloco"><div class="aviso-dado"><b>Sem área queimada em vegetação neste período.</b>
-       Houve fogo em outros anos da série, mas não neste, por isso não há ranque de área
-       queimada. A anomalia compara o zero do período com a média da série.</div></div>`
     : '';
 
   const destaque = destaqueDe(reg);
