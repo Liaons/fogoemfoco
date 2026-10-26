@@ -21,14 +21,14 @@ const DADOS = 'dados/';
 // Carimbo do conteudo de dados/, reescrito por 11_versionar_assets.py. Os JSONs e os
 // TopoJSONs sao buscados com fetch e o navegador os guarda em cache como qualquer outro
 // arquivo: sem este carimbo, trocar uma camada nao chega a quem ja visitou a pagina.
-const VERSAO_DADOS = 'f6e16997';
+const VERSAO_DADOS = 'b8018004';
 
 const CAMADAS = [
   { id: 'UF',              rotulo: 'Estados',                 geo: 'uf.json',             tipo: 'geojson',  filtravel: false },
-  { id: 'Municipios',      rotulo: 'Municípios',              geo: 'municipios.json',    tipo: 'topojson', filtravel: true  },
+  { id: 'Municipios',      rotulo: 'Municípios',              geo: 'municipios.json',    tipo: 'topojson', filtravel: true, filtro: 'uf'   },
   { id: 'Biomas',          rotulo: 'Biomas',                  geo: 'biomas.json',         tipo: 'geojson',  filtravel: false },
-  { id: 'UCs',             rotulo: 'Unidades de conservação', geo: 'ucs.json',           tipo: 'topojson', filtravel: true  },
-  { id: 'TerrasIndigenas', rotulo: 'Terras indígenas',        geo: 'tis.json',           tipo: 'topojson', filtravel: true  },
+  { id: 'UCs',             rotulo: 'Unidades de conservação', geo: 'ucs.json',           tipo: 'topojson', filtravel: true, filtro: 'tipo' },
+  { id: 'TerrasIndigenas', rotulo: 'Terras indígenas',        geo: 'tis.json',           tipo: 'topojson', filtravel: true, filtro: 'tipo' },
   // Assentamentos ficaram fora desta edicao: a analise cobriu 2.429 das 8.217 feicoes
   // do INCRA, em doze estados. Para trazer de volta, descomente aqui e tire a camada de
   // CAMADAS_OCULTAS em codigos/07_preparar_dados_web.py e 09_validar_dados_web.py.
@@ -160,6 +160,7 @@ const estado = {
   camada: 'UF',
   variavel: 'aq_ranque',
   filtroUf: '',
+  filtroTipo: '',      // UCs e TIs: grupo/categoria ou homologacao/fase (ver casaTipo)
   atributos: {},
   geometrias: {},
   series: {},
@@ -324,12 +325,39 @@ async function serie(tipo, camada, chunk) {
   return estado.series[ch];
 }
 
+// UCs e TIs nao se filtram por estado: a alcada nem sempre e do estado onde esta a area.
+// O filtro delas e por tipo. Tambem nao tem ranque na serie historica: a area pode nem
+// existir em parte da serie (TIs e UCs criadas depois de 2002).
+const SEM_RANQUE_HISTORICO = new Set(['UCs', 'TerrasIndigenas']);
+const semRanqueHistorico = (camada = estado.camada) => SEM_RANQUE_HISTORICO.has(camada);
+const tipoDeFiltro = () => (CAMADAS.find(c => c.id === estado.camada) || {}).filtro;
+const filtroAtivo = () => tipoDeFiltro() === 'uf' ? estado.filtroUf : tipoDeFiltro() === 'tipo' ? estado.filtroTipo : '';
+
+// valor do filtro de tipo: "g:<grupo>" e "c:<categoria>" nas UCs, "h:sim|nao" e "f:<fase>" nas TIs
+function casaTipo(reg, valor) {
+  const [k, v] = [valor.slice(0, 1), valor.slice(2)];
+  if (k === 'g') return reg.grupo === v;
+  if (k === 'c') return reg.categoria === v;
+  if (k === 'h') return !!reg.homologada === (v === 'sim');
+  if (k === 'f') return reg.fase === v;
+  return true;
+}
+
+// Como o filtro aparece nos textos: "MA", "Parque", "homologadas"...
+function filtroRotulo() {
+  const v = filtroAtivo();
+  if (!v || tipoDeFiltro() === 'uf') return v;
+  return v === 'h:sim' ? 'homologadas' : v === 'h:nao' ? 'não homologadas' : v.slice(2);
+}
+
 function visiveis() {
   const atrib = estado.atributos[estado.camada];
-  if (!estado.filtroUf) return atrib;
+  const valor = filtroAtivo();
+  if (!valor) return atrib;
+  const porUf = tipoDeFiltro() === 'uf';
   const fora = {};
   for (const [rid, reg] of Object.entries(atrib)) {
-    if ((reg.chunk || reg.uf) === estado.filtroUf) fora[rid] = reg;
+    if (porUf ? (reg.chunk || reg.uf) === valor : casaTipo(reg, valor)) fora[rid] = reg;
   }
   return fora;
 }
@@ -373,7 +401,7 @@ function desenhar(ajustarZoom) {
   estado.camadasPorRid = {};
 
   camadaLeaflet = L.geoJSON(estado.geometrias[estado.camada], {
-    filter: (f) => !estado.filtroUf || !!mostrar[String(f.properties.rid)],
+    filter: (f) => !filtroAtivo() || !!mostrar[String(f.properties.rid)],
     style: (f) => {
       const reg = atrib[String(f.properties.rid)];
       const apagada = reg && reg.estado_dado === 'fora' && defAtual().fonte === 'aq';
@@ -511,7 +539,7 @@ function ranqueDaVariavel(def) {
 // ranques menores, cada um na cor da sua classe.
 function destaqueDe(reg) {
   const def = defAtual();
-  if (!def) return '';
+  if (!def || semRanqueHistorico()) return '';
   const principal = ranqueDaVariavel(def);
   const ranques = VARIAVEIS.filter(v => v.escala === 'ranque');
   const grande = semDado(reg, principal)
@@ -580,7 +608,7 @@ function render(reg, sgfa, sclima, seventos) {
         ? `<p class="nota">Fora da tabela de focos de calor deste período.</p>`
         : `<div class="numeros-sel">
              <div><b>${nf(reg.focos)}</b><small>focos no período</small></div>
-             <div><b>${reg.focos_ranque}º</b><small>posição na série de ${PERIODOS} anos</small></div>
+             ${semRanqueHistorico() ? '' : `<div><b>${reg.focos_ranque}º</b><small>posição na série de ${PERIODOS} anos</small></div>`}
            </div>`}
     </div>` : ''}
     ${blocoEventos(reg, seventos)}
@@ -672,7 +700,7 @@ function blocoGfa(reg, sincronizar = true) {
            <small>média ± desvio padrão anual</small></div>
       <div><b>${temValor && an !== null && an !== undefined ? comSinal(an, 0) + '%' : '—'}</b>
            <small>${temValor && z !== null && z !== undefined ? comSinal(z, 1) + ' dp · ' : ''}anomalia</small></div>
-      <div><b>${temValor && rk ? rk + 'º' : '—'}</b><small>na série desde 2002</small></div>
+      ${semRanqueHistorico() ? '' : `<div><b>${temValor && rk ? rk + 'º' : '—'}</b><small>na série desde 2002</small></div>`}
     </div>
     <div class="grafico"><canvas id="g-gfa"></canvas></div>
     <p class="nota">Global Fire Atlas, períodos de março a fevereiro pelo ano de início. Faixa clara:
@@ -962,20 +990,48 @@ function grafClima(s, temp, alvo) {
 
 function montarFiltro() {
   const def = CAMADAS.find(c => c.id === estado.camada);
-  // O filtro por estado so nas camadas grandes; a busca fica sempre, sobre o mapa.
-  $('#bloco-filtro').hidden = !def.filtravel;
-  if (!def.filtravel) return;
+  // Municipios: filtro por estado. UCs e TIs: por tipo. A busca fica sempre, sobre o mapa.
+  $('#bloco-filtro').hidden = !def.filtro;
+  if (!def.filtro) return;
 
   const atrib = estado.atributos[estado.camada];
-  const ufs = [...new Set(Object.values(atrib).map(r => r.chunk || r.uf).filter(Boolean))].sort();
+  const regs = Object.values(atrib);
   const sel = $('#filtro-uf');
-  sel.innerHTML = `<option value="">Todos os estados (${nf(Object.keys(atrib).length)})</option>` +
-    ufs.map(u => `<option value="${u}">${u}</option>`).join('');
-  sel.value = estado.filtroUf;
+  const opc = (valor, rotulo, n) => `<option value="${valor}">${rotulo} (${nf(n)})</option>`;
+  const conta = (f) => regs.filter(f).length;
+  if (def.filtro === 'uf') {
+    const ufs = [...new Set(regs.map(r => r.chunk || r.uf).filter(Boolean))].sort();
+    sel.setAttribute('aria-label', 'Filtrar por estado');
+    sel.innerHTML = `<option value="">Todos os estados (${nf(regs.length)})</option>` +
+      ufs.map(u => `<option value="${u}">${u}</option>`).join('');
+    sel.value = estado.filtroUf;
+  } else if (estado.camada === 'UCs') {
+    // grupo do SNUC e, dentro dele, as categorias
+    const grupos = [...new Set(regs.map(r => r.grupo).filter(Boolean))].sort();
+    sel.setAttribute('aria-label', 'Filtrar por tipo de unidade de conservação');
+    sel.innerHTML = `<option value="">Todos os tipos (${nf(regs.length)})</option>` + grupos.map(g => {
+      const cats = [...new Set(regs.filter(r => r.grupo === g).map(r => r.categoria))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      return `<optgroup label="${g}">${opc('g:' + g, 'Todas de ' + g, conta(r => r.grupo === g))}${
+        cats.map(k => opc('c:' + k, k, conta(r => r.categoria === k))).join('')}</optgroup>`;
+    }).join('');
+    sel.value = estado.filtroTipo;
+  } else {
+    // homologadas (Homologada e Regularizada na FUNAI) e as demais fases
+    const fases = (h) => [...new Set(regs.filter(r => !!r.homologada === h).map(r => r.fase))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const grupo = (h, rot) => `<optgroup label="${rot}">${opc('h:' + (h ? 'sim' : 'nao'), 'Todas as ' + rot.toLowerCase(),
+      conta(r => !!r.homologada === h))}${fases(h).map(f => opc('f:' + f, f, conta(r => r.fase === f))).join('')}</optgroup>`;
+    sel.setAttribute('aria-label', 'Filtrar terras indígenas por homologação');
+    sel.innerHTML = `<option value="">Todas as terras indígenas (${nf(regs.length)})</option>` +
+      grupo(true, 'Homologadas') + grupo(false, 'Não homologadas');
+    sel.value = estado.filtroTipo;
+  }
 
-  $('#ajuda-filtro').textContent = estado.filtroUf
-    ? `Mostrando ${nf(Object.keys(visiveis()).length)} feições em ${estado.filtroUf}.`
-    : 'Filtre por estado para desenhar menos feições e navegar mais rápido.';
+  const n = Object.keys(visiveis()).length;
+  $('#ajuda-filtro').textContent = filtroAtivo()
+    ? `Mostrando ${nf(n)} ${def.rotulo.toLowerCase()}: ${filtroRotulo()}.`
+    : def.filtro === 'uf' ? 'Filtre por estado para desenhar menos feições e navegar mais rápido.'
+    : estado.camada === 'UCs' ? 'Filtre pelo grupo ou pela categoria da unidade (CNUC).'
+    : 'Homologadas: fases Homologada e Regularizada da FUNAI.';
 }
 
 // A busca procura em todas as camadas, num indice leve (dados/busca.json, ~110 KB com
@@ -1023,7 +1079,7 @@ async function buscar() {
       caixa.innerHTML = '';
       const { rid, camada } = b.dataset;
       if (camada !== estado.camada) await trocarCamada(camada);
-      else if (estado.filtroUf && !visiveis()[rid]) trocarFiltro('');
+      else if (filtroAtivo() && !visiveis()[rid]) trocarFiltro('');
       selecionar(rid, true);
     };
   });
@@ -1056,12 +1112,23 @@ function montarCamadas(itens) {
   alvo.querySelectorAll('input').forEach(i => { i.onchange = () => trocarCamada(i.value); });
 }
 
+// Variavel que existe na camada aberta (sem os ranques da serie nas UCs e TIs, sem clima
+// nos biomas). Roda antes de calcular a escala, para o mapa e a legenda ja sairem nela.
+function temDadoNaCamada(v) {
+  const regs = Object.values(estado.atributos[estado.camada] || {});
+  return !(v.escala === 'ranque' && semRanqueHistorico()) && regs.some(r => r[v.id] !== null && r[v.id] !== undefined);
+}
+function garantirVariavel() {
+  if (!VARIAVEIS.some(v => v.id === estado.variavel && temDadoNaCamada(v))) {
+    estado.variavel = semRanqueHistorico() ? 'aq' : 'aq_ranque';
+  }
+}
+
 function montarVariaveis() {
   const alvo = $('#variaveis');
   alvo.innerHTML = '';
-  const regs = Object.values(estado.atributos[estado.camada] || {});
-  const temDado = (v) => regs.some(r => r[v.id] !== null && r[v.id] !== undefined);
-  if (!VARIAVEIS.some(v => v.id === estado.variavel && temDado(v))) estado.variavel = 'aq_ranque';
+  const temDado = temDadoNaCamada;
+  garantirVariavel();
   // Cada grupo e um menu retratil. O grupo da variavel do mapa abre sempre; os outros
   // ficam como o leitor deixou (lembrado entre visitas).
   let abertos = [];
@@ -1182,11 +1249,11 @@ function resumoCamada() {
   const com = todas.filter(([, r]) => !semDado(r, def));
   const f = def.fator || 1;
   const casas = def.casas === undefined ? 1 : def.casas;
-  const onde = estado.filtroUf ? ` · ${estado.filtroUf}` : '';
+  const onde = filtroAtivo() ? ` · ${filtroRotulo()}` : '';
   const linha = ([rid, r]) => `<button class="achado" data-rid="${rid}"><span>${r.nome}${
     r.uf && estado.camada !== 'UF' ? ` <small>${String(r.uf).split(',')[0]}</small>` : ''}</span><b>${valorTexto(r, def)}</b></button>`;
 
-  const numeros = [`<div><b>${nf(todas.length)}</b><small>${cam.rotulo.toLowerCase()}${onde ? ' em ' + estado.filtroUf : ''}</small></div>`,
+  const numeros = [`<div><b>${nf(todas.length)}</b><small>${cam.rotulo.toLowerCase()}${!onde ? '' : tipoDeFiltro() === 'uf' ? ' em ' + estado.filtroUf : ': ' + filtroRotulo()}</small></div>`,
                    `<div><b>${nf(com.length)}</b><small>com dado nesta variável</small></div>`];
   let lista = '', titulo1 = 'Os cinco primeiros', extra = '';
 
@@ -1207,7 +1274,7 @@ function resumoCamada() {
     if (moda) numeros.push(`<div class="largo"><b><i class="amostra" style="background:${corMes(moda)}"></i>${
       MESES_EXTENSO[moda - 1]}</b><small>mês de pico mais frequente (moda) entre as feições com área queimada</small></div>`);
     extra = `<p class="nota">Sem uma área selecionada, o mês de pico mostrado é a moda: o mês que mais se
-      repete entre todos os polígonos ${estado.filtroUf ? 'filtrados' : 'da camada'} com área queimada na série.
+      repete entre todos os polígonos ${filtroAtivo() ? 'filtrados' : 'da camada'} com área queimada na série.
       Clique numa área para ver o mês de pico dela.</p>`;
     lista = top.map(([m, n]) => `<div class="achado"><span><i class="amostra" style="background:${corMes(+m)}"></i>${
       MESES[(+m + 9) % 12]}</span><b>${nf(n)} (${nf(n / com.length * 100, 0)}%)</b></div>`).join('');
@@ -1259,12 +1326,14 @@ function resumoCamada() {
 async function trocarCamada(id) {
   estado.camada = id;
   estado.filtroUf = '';
+  estado.filtroTipo = '';
   estado.selecionado = null;
   $('#busca').value = '';
   $('#achados').innerHTML = '';
   ocupado(true, 'Carregando camada…');
   try {
     await garantirCamada(id);
+    garantirVariavel();
     calcularFaixa();
     desenhar(false);
     montarControles();
@@ -1288,9 +1357,9 @@ function trocarVariavel(id) {
   else limparPainel();
 }
 
-function trocarFiltro(uf) {
+function trocarFiltro(valor) {
   estado.selecionado = null;
-  estado.filtroUf = uf;
+  if (tipoDeFiltro() === 'tipo') estado.filtroTipo = valor; else estado.filtroUf = valor;
   calcularFaixa();
   desenhar(true);
   montarFiltro();
@@ -1428,6 +1497,7 @@ async function iniciar() {
   if (pedida && CAMADAS.some(c => c.id === pedida)) estado.camada = pedida;
 
   await garantirCamada(estado.camada);
+  garantirVariavel();
   calcularFaixa();
   desenhar(false);
   montarControles();

@@ -115,13 +115,16 @@
   }
 
   // abrangencia: { tipo: 'brasil' } | { tipo: 'uf', uf: 'BA' } | { tipo: 'area', camada, rid }
+  // UCs e TIs nao se recortam por estado (a alcada nem sempre e do estado onde esta a
+  // area) nem tem ranque na serie historica (a area pode nao existir em parte da serie).
+  const SEM_UF_NEM_RANQUE = ['UCs', 'TerrasIndigenas'];
+
   function filtrarFeicoes(atributos, camada, abrangencia) {
     const todas = Object.entries(atributos || {});
     let sel;
     if (abrangencia.tipo === 'area') {
       sel = abrangencia.camada === camada ? todas.filter(([rid]) => rid === String(abrangencia.rid)) : [];
-    } else if (abrangencia.tipo === 'uf' && camada !== 'Biomas') {
-      // TIs em mais de um estado ("MT,PA") entram em cada um deles
+    } else if (abrangencia.tipo === 'uf' && camada !== 'Biomas' && !SEM_UF_NEM_RANQUE.includes(camada)) {
       const uf = abrangencia.uf;
       sel = todas.filter(([, r]) => String(r.chunk || r.uf || '').split(',').map(s => s.trim()).includes(uf));
     } else {
@@ -140,7 +143,8 @@
         const ufc = g.camada === 'Biomas' ? '' : (g.camada === 'UCs' ? (r.chunk || '') : primeiraUf(r.uf));
         const linha = [g.rotulo, String(rid), r.cod == null ? '' : String(r.cod), r.nome, ufc, r.estado_dado || ''];
         for (const c of escolhidos) {
-          const v = r.estado_dado !== 'ok' && SO_COM_FOGO.includes(c.id) ? null : r[c.id];
+          const v = (r.estado_dado !== 'ok' && SO_COM_FOGO.includes(c.id)) ||
+                    (c.bloco === 'ranques' && SEM_UF_NEM_RANQUE.includes(g.camada)) ? null : r[c.id];
           linha.push(v === null || v === undefined || !Number.isFinite(v)
             ? null : (c.fator === 1 ? v : Math.round(v * c.fator * 1e6) / 1e6));
         }
@@ -152,6 +156,7 @@
 
   FEFDownload.ID_COLUNAS = ID_COLUNAS;
   FEFDownload.filtrarFeicoes = filtrarFeicoes;
+  FEFDownload.SEM_UF_NEM_RANQUE = SEM_UF_NEM_RANQUE;
   FEFDownload.montarTabela = montarTabela;
   const CITACAO = 'Fogo em foco: diagnóstico dos incêndios no Brasil em 2025/2026. ' +
     'Rede Brasa de Pesquisa. – São José dos Campos: INPE, 2026.';
@@ -167,8 +172,11 @@
   };
 
   function quandoVazio(c) {
+    const ucti = 'vazio nas UCs e TIs: o ranque na série histórica não se aplica a elas (a área pode não existir em parte da série)';
     if (c.bloco === 'clima') return 'sem série de clima (os biomas não têm clima)';
-    if (c.bloco === 'focos' || c.id === 'focos_ranque') return 'sem foco de calor no período';
+    if (c.id === 'focos_ranque') return 'sem foco de calor no período; ' + ucti;
+    if (c.bloco === 'ranques') return 'sem fogo na série ou fora do processamento; ' + ucti;
+    if (c.bloco === 'focos') return 'sem foco de calor no período';
     if (c.id === 'eventos') return 'nunca vazio: 0 quando não há evento em 2025';
     if (c.id === 'ev_ranque' || c.id === 'ev_frentes_ranque') return 'nenhum evento em 2025, ou área fora da tabela de eventos de 2025';
     if (c.id === 'ev_frentes') return '0 quando não há evento; vazio quando há evento sem linha na tabela de frentes';

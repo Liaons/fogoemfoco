@@ -258,10 +258,12 @@
 
   function htmlFicha() {
     fic = fic || fichaInicial();
+    const semRk = areaDaFicha() && semRanqueHistorico(areaDaFicha().camada);
+    if (semRk && (VARIAVEIS.find(v => v.id === fic.variavel) || {}).escala === 'ranque') fic.variavel = 'aq';
     const radio = (v, rot, des = false) => `<label><input type="radio" name="area-ficha" value="${v}"${
       fic.modo === v ? ' checked' : ''}${des ? ' disabled' : ''}>${rot}</label>`;
     const nomeArea = (a) => `<b>${escHtml(a.nome)}</b> <small>${ROTULO_CURTO[a.camada]}</small>`;
-    const opcoes = GRUPOS.map(g => `<optgroup label="${escHtml(g.rotulo)}">${VARIAVEIS.filter(v => v.grupo === g.id)
+    const opcoes = GRUPOS.filter(g => !(semRk && g.id === 'ranques')).map(g => `<optgroup label="${escHtml(g.rotulo)}">${VARIAVEIS.filter(v => v.grupo === g.id)
       .map(v => `<option value="${v.id}"${v.id === fic.variavel ? ' selected' : ''}>${escHtml(v.rotulo)}</option>`).join('')}</optgroup>`).join('');
     return `
       <div class="passo-dl"><h4>1 · Área</h4><div class="abrang-dl col">
@@ -271,7 +273,7 @@
           <input type="search" id="busca-ficha" placeholder="Buscar estado, município, bioma, UC ou TI" autocomplete="off"
             aria-label="Buscar área para a ficha">
           <div id="achados-ficha" class="achados"></div></div></div></div>
-      <div class="passo-dl"><h4>2 · Variável do mapa <small>colore o mapa e destaca o ranque</small></h4>
+      <div class="passo-dl"><h4>2 · Variável do mapa <small>${semRk ? 'colore o mapa' : 'colore o mapa e destaca o ranque'}</small></h4>
         <div class="abrang-dl"><select id="var-ficha" aria-label="Variável do mapa da ficha">${opcoes}</select></div></div>
       <div class="rodape-dl"><span id="previa-dl" aria-live="polite"></span>
         <button type="button" id="gerar-ficha">Gerar ficha</button></div>`;
@@ -402,7 +404,7 @@
     }).join('');
   }
 
-  function htmlNumeros(reg, anoEv) {
+  function htmlNumeros(reg, anoEv, comRanque = true) {
     const aq = reg.estado_dado === 'ok'
       ? `<div class="nums"><div><b>${nf(reg.aq, 1)} km²</b>no período</div>
            <div><b>${reg.aq_anom_pct === null ? '—' : comSinal(reg.aq_anom_pct, 0) + '%'}</b>vs. média${reg.aq_media === null || reg.aq_media === undefined ? '' : ` (${nf(reg.aq_media, 0)} km²)`}</div>
@@ -418,12 +420,12 @@
           : nf(reg[m.id + '_media'], m.casas) + (reg[m.id + '_dp'] === null || reg[m.id + '_dp'] === undefined
             ? '' : ' ± ' + nf(reg[m.id + '_dp'], m.casas))}</td>
         <td>${tem && an !== null && an !== undefined ? `<span class="tag" style="background:${corAnomalia(an)}${an > -15 && an <= 50 ? ';color:#0a0c1c' : ''}">${comSinal(an, 0)}%</span>` : '—'}</td>
-        <td>${tem && reg[m.id + '_ranque'] ? reg[m.id + '_ranque'] + 'º' : '—'}</td></tr>`;
+        ${comRanque ? `<td>${tem && reg[m.id + '_ranque'] ? reg[m.id + '_ranque'] + 'º' : '—'}</td>` : ''}</tr>`;
     }).join('');
     return `
       <div class="bl"><h4>Área queimada em vegetação</h4>${aq}</div>
       <div class="bl"><h4>Métricas de fogo (GFA)</h4><table><tr><th>métrica</th><th>2025-26</th><th>média ± dp</th>
-        <th>anomalia</th><th>ranque</th></tr>${linhasGfa}</table></div>
+        <th>anomalia</th>${comRanque ? '<th>ranque</th>' : ''}</tr>${linhasGfa}</table></div>
       <div class="bl"><h4>Focos e eventos</h4><div class="nums">
         <div><b>${reg.focos ? nf(reg.focos) : '—'}</b>focos de calor</div>
         <div><b>${reg.eventos ? nf(reg.eventos) : '—'}</b>eventos em ${anoEv}</div>
@@ -498,7 +500,9 @@
     await garantirAtributos(camada);
     const reg = estado.atributos[camada][rid];
     if (!reg) throw new Error('área não encontrada');
-    const def = VARIAVEIS.find(v => v.id === variavel) || defAtual();
+    // UCs e TIs nao tem ranque na serie historica: com um ranque escolhido, o mapa sai na area queimada
+    const pedida = VARIAVEIS.find(v => v.id === variavel) || defAtual();
+    const def = semRanqueHistorico(camada) && pedida.escala === 'ranque' ? VARIAVEIS.find(v => v.id === 'aq') : pedida;
     const anoEv = (estado.meta.eventos || {}).ano || 2025;
     const sg = (await serie('gfa', camada, reg.chunk || null))[rid];
     const sc = (await serie('clima', camada, reg.chunk || null))[rid];
@@ -552,9 +556,9 @@
         <div class="cab"><div><h1${reg.nome.length > 40 ? ' class="longo"' : ''}>${escHtml(reg.nome)}</h1><p>${TIPO_AREA[camada] || camada}${uf}
           · ficha de fogo · período março/2025 a fevereiro/2026</p></div>
           <img src="${LOGO('logo_fogoemfoco_horizontal_claro.svg')}" alt="Fogo em Foco"></div>
-        <div class="rq">${htmlRanques(reg, def)}</div>
+        ${semRanqueHistorico(camada) ? '' : `<div class="rq">${htmlRanques(reg, def)}</div>`}
         <div class="meio"><div class="mapa"><small>${mapa.titulo}</small>${mapa.svg}<div class="leg">${mapa.legenda}</div></div>
-          <div class="blocos">${htmlNumeros(reg, anoEv)}</div></div>
+          <div class="blocos">${htmlNumeros(reg, anoEv, !semRanqueHistorico(camada))}</div></div>
         <div class="graf">${htmlGraf}</div>
         <div class="rod"><div>Fontes: área queimada MODIS MCD64A1 (vegetação com ≥30% de cobertura arbórea); Global Fire Atlas;
           focos e eventos de fogo do INPE; clima ERA5 e ERA5-Land (média ${clima.ref}). Ranque: posição na série de 24 períodos, 1º = maior
