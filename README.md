@@ -29,9 +29,17 @@ São duas páginas estáticas, sem build e sem framework, publicadas pelo GitHub
 | Unidades de conservação | 3.247 |
 | Terras indígenas | 657 |
 
-O menu flutuante no canto do mapa troca a camada. Nas camadas grandes, um filtro por
-estado desenha menos feições e recalcula a escala de cor só sobre o que está visível. Um
-duplo clique num estado abre os municípios dele.
+O menu flutuante no canto do mapa troca a camada e traz o filtro dela, que desenha menos
+feições e recalcula a escala de cor só sobre o que está visível:
+
+- **Municípios:** por estado. Um duplo clique num estado também abre os municípios dele.
+- **Unidades de conservação:** por grupo (Proteção Integral, Uso Sustentável) e por
+  categoria, do CNUC.
+- **Terras indígenas:** homologadas (fases Homologada e Regularizada da FUNAI) ou não
+  homologadas, e por fase.
+
+UCs e TIs não têm filtro por estado: a alçada nem sempre é do estado onde fica a maior
+parte da área.
 
 ### Variáveis do mapa
 
@@ -39,7 +47,9 @@ As variáveis ficam em grupos recolhíveis, na mesma ordem das figuras do relat�
 
 - **Ranques na série histórica:** área queimada, as cinco métricas do GFA e focos de
   calor. É a posição do período 2025-2026 na série do próprio território, de 1 (maior
-  registro desde 2002) a 24.
+  registro desde 2002) a 24. Só existem para estados, municípios e biomas: UCs e TIs
+  ficam sem ranque histórico, porque muitas foram criadas depois de 2002 e não existem
+  em parte da série. No CSV, essas colunas saem vazias para elas.
 - **Área queimada (MODIS):** área, fração do território, anomalia contra a média e mês
   de pico da anomalia.
 - **Métricas do fogo (GFA):**
@@ -214,6 +224,8 @@ de um polígono.
 | `ev_dur_media`, `ev_dur_max` | duração média sem os eventos acima do percentil 99 do país (nula com menos de 5 eventos) e duração máxima, em dias |
 | `ev_frentes` | frentes de fogo dos eventos de 2025 |
 | `ev_ranque`, `ev_frentes_ranque` | ranques espaciais de 2025: posição entre todas as áreas da camada no país (1 = mais eventos ou frentes) |
+| `grupo`, `categoria` | só nas UCs: grupo do SNUC e categoria, do CNUC |
+| `fase`, `homologada` | só nas TIs: fase na FUNAI; `homologada` vale para Homologada e Regularizada |
 
 ### Cuidados
 
