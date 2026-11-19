@@ -1,0 +1,220 @@
+{
+  "sobre": "Descrição das variáveis da plataforma Fogo em Foco 2025-2026, usada no painel esquerdo da plataforma e na seção Método da página inicial. A ordem e os ids seguem VARIAVEIS em assets/plataforma.js.",
+  "periodo": "março de 2025 a fevereiro de 2026",
+  "grupos": [
+    {
+      "id": "ranques",
+      "rotulo": "Ranques na série histórica",
+      "descricao": "Posição do período 2025-2026 na série do próprio recorte, de 1 (maior registro desde 2002) a 24. Compara cada estado, município ou bioma com a sua própria história. Unidades de conservação e terras indígenas não têm ranque histórico, porque muitas foram criadas depois de 2002."
+    },
+    {
+      "id": "aq",
+      "rotulo": "Área queimada (MODIS)",
+      "descricao": "Área queimada estimada pelo produto MODIS MCD64A1, considerando apenas a vegetação com pelo menos 30% de cobertura arbórea."
+    },
+    {
+      "id": "gfa",
+      "rotulo": "Métricas do fogo (GFA)",
+      "descricao": "Métricas de comportamento dos incêndios do Global Fire Atlas, que identifica cada incêndio individual a partir da área queimada do MODIS."
+    },
+    {
+      "id": "clima",
+      "rotulo": "Clima (temperatura e precipitação)",
+      "descricao": "Temperatura e precipitação de março de 2025 a fevereiro de 2026, comparadas com a média dos mesmos meses de 2003 a 2024."
+    },
+    {
+      "id": "focos",
+      "rotulo": "Focos de calor",
+      "descricao": "Detecções de fogo ativo por satélite do Programa Queimadas do INPE."
+    },
+    {
+      "id": "eventos",
+      "rotulo": "Eventos de fogo",
+      "descricao": "Ocorrências de fogo do INPE em 2025, montadas a partir do agrupamento dos focos de calor no espaço e no tempo."
+    }
+  ],
+  "variaveis": [
+    {
+      "id": "aq_ranque",
+      "grupo": "ranques",
+      "rotulo": "Área queimada",
+      "descricao": "Posição da área queimada em vegetação no período 2025-2026 na série desde 2002. O ranque 1 indica o maior registro da série no recorte, e o 24, o menor.",
+      "fonte": "MODIS MCD64A1 (NASA), coleção 6.1, 500 m"
+    },
+    {
+      "id": "n_incendios_ranque",
+      "grupo": "ranques",
+      "rotulo": "Número de incêndios",
+      "descricao": "Posição do número de incêndios individuais do período na série desde 2002-2003. O ranque 1 indica o ano com mais incêndios no recorte.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019)"
+    },
+    {
+      "id": "tam_max_ranque",
+      "grupo": "ranques",
+      "rotulo": "Tamanho máximo",
+      "descricao": "Posição do maior incêndio do período na série desde 2002-2003. O ranque 1 indica que o maior incêndio de 2025-2026 foi o maior já registrado no recorte.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019)"
+    },
+    {
+      "id": "taxa_max_ranque",
+      "grupo": "ranques",
+      "rotulo": "Taxa de crescimento (máx)",
+      "descricao": "Posição da maior taxa de crescimento de um incêndio no período na série desde 2002-2003. O ranque 1 indica o incêndio de espalhamento mais rápido já registrado no recorte.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019)"
+    },
+    {
+      "id": "tam_p95_ranque",
+      "grupo": "ranques",
+      "rotulo": "Tamanho (P95)",
+      "descricao": "Posição do tamanho dos incêndios no percentil 95 (os 5% maiores do período) na série desde 2002-2003. É menos sensível a um único incêndio extremo que o tamanho máximo.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019)"
+    },
+    {
+      "id": "taxa_p95_ranque",
+      "grupo": "ranques",
+      "rotulo": "Taxa de crescimento (P95)",
+      "descricao": "Posição da taxa de crescimento no percentil 95 (os 5% incêndios mais rápidos do período) na série desde 2002-2003.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019)"
+    },
+    {
+      "id": "focos_ranque",
+      "grupo": "ranques",
+      "rotulo": "Focos de calor",
+      "descricao": "Posição do número de focos de calor do período na série de 24 anos. O ranque 1 indica o período com mais focos já registrado no recorte.",
+      "fonte": "Programa Queimadas, INPE"
+    },
+    {
+      "id": "aq",
+      "grupo": "aq",
+      "rotulo": "Área queimada",
+      "descricao": "Área queimada (km²) entre março de 2025 e fevereiro de 2026 em vegetação com pelo menos 30% de cobertura arbórea. Não inclui o fogo em campos e áreas abertas, então não corresponde à área queimada total.",
+      "fonte": "MODIS MCD64A1 (NASA), coleção 6.1, 500 m"
+    },
+    {
+      "id": "aq_frac",
+      "grupo": "aq",
+      "rotulo": "Fração queimada",
+      "descricao": "Parte da vegetação com pelo menos 30% de cobertura arbórea do recorte que queimou no período (%). Em áreas pequenas ou com pouca vegetação florestal, um único pixel de 500 m pode levar a fração a valores altos.",
+      "fonte": "MODIS MCD64A1 (NASA), coleção 6.1, 500 m"
+    },
+    {
+      "id": "aq_anom_pct",
+      "grupo": "aq",
+      "rotulo": "Anomalia da área queimada",
+      "descricao": "Diferença entre a área queimada do período e a média anual da série desde 2002 (%). Valores positivos indicam que o recorte queimou mais que o habitual.",
+      "fonte": "MODIS MCD64A1 (NASA), coleção 6.1, 500 m"
+    },
+    {
+      "id": "mes_pico",
+      "grupo": "aq",
+      "rotulo": "Mês de pico da anomalia",
+      "descricao": "Mês, entre março de 2025 e fevereiro de 2026, em que a área queimada mais superou a média do mesmo mês na série. Só tem sentido nos recortes com anomalia positiva.",
+      "fonte": "MODIS MCD64A1 (NASA), coleção 6.1, 500 m"
+    },
+    {
+      "id": "n_incendios",
+      "grupo": "gfa",
+      "rotulo": "Número de incêndios",
+      "descricao": "Quantidade de incêndios individuais no período. O Global Fire Atlas acompanha a expansão diária da área queimada e separa cada incêndio pelo início e pela continuidade no espaço.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019), sobre o MODIS MCD64A1"
+    },
+    {
+      "id": "tam_max",
+      "grupo": "gfa",
+      "rotulo": "Tamanho máximo",
+      "descricao": "Área do maior incêndio individual do período (km²).",
+      "fonte": "Global Fire Atlas (Andela et al., 2019), sobre o MODIS MCD64A1"
+    },
+    {
+      "id": "taxa_max",
+      "grupo": "gfa",
+      "rotulo": "Taxa de crescimento (máx)",
+      "descricao": "Maior velocidade de expansão de um incêndio no período, em km² por dia. Indica o quanto o fogo pode avançar num único dia.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019), sobre o MODIS MCD64A1"
+    },
+    {
+      "id": "tam_p95",
+      "grupo": "gfa",
+      "rotulo": "Tamanho (P95)",
+      "descricao": "Tamanho dos incêndios no percentil 95 (km²): o valor a partir do qual estão os 5% maiores incêndios do período.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019), sobre o MODIS MCD64A1"
+    },
+    {
+      "id": "taxa_p95",
+      "grupo": "gfa",
+      "rotulo": "Taxa de crescimento (P95)",
+      "descricao": "Taxa de crescimento no percentil 95 (km² por dia): o valor a partir do qual estão os 5% incêndios mais rápidos do período.",
+      "fonte": "Global Fire Atlas (Andela et al., 2019), sobre o MODIS MCD64A1"
+    },
+    {
+      "id": "t_periodo",
+      "grupo": "clima",
+      "rotulo": "Temperatura média",
+      "descricao": "Temperatura média do ar (°C) de março de 2025 a fevereiro de 2026, a partir das médias mensais.",
+      "fonte": "Reanálise ERA5 (ECMWF/Copernicus)"
+    },
+    {
+      "id": "t_dif",
+      "grupo": "clima",
+      "rotulo": "Temperatura: diferença da média",
+      "descricao": "Diferença (°C) entre a temperatura média do período e a média dos mesmos meses de 2003 a 2024. Valores positivos indicam um período mais quente que o habitual.",
+      "fonte": "Reanálise ERA5 (ECMWF/Copernicus)"
+    },
+    {
+      "id": "p_periodo",
+      "grupo": "clima",
+      "rotulo": "Precipitação acumulada",
+      "descricao": "Chuva acumulada (mm) de março de 2025 a fevereiro de 2026.",
+      "fonte": "Reanálise ERA5-Land (ECMWF/Copernicus)"
+    },
+    {
+      "id": "p_dif_pct",
+      "grupo": "clima",
+      "rotulo": "Precipitação: diferença da média",
+      "descricao": "Diferença (%) entre a chuva acumulada no período e a média dos mesmos meses de 2003 a 2024. Valores negativos indicam um período mais seco que o habitual.",
+      "fonte": "Reanálise ERA5-Land (ECMWF/Copernicus)"
+    },
+    {
+      "id": "focos",
+      "grupo": "focos",
+      "rotulo": "Número de focos",
+      "descricao": "Focos de calor detectados no período: anomalias térmicas na superfície que indicam fogo ativo na passagem do satélite. Um mesmo incêndio pode gerar vários focos.",
+      "fonte": "Programa Queimadas, INPE"
+    },
+    {
+      "id": "eventos",
+      "grupo": "eventos",
+      "rotulo": "Número de eventos",
+      "descricao": "Eventos de fogo de janeiro a dezembro de 2025. Cada evento reúne os focos e a área queimada de uma mesma ocorrência, da primeira à última detecção, e é contado no recorte onde está o seu centro.",
+      "fonte": "Eventos de fogo, Programa Queimadas, INPE"
+    },
+    {
+      "id": "ev_ranque",
+      "grupo": "eventos",
+      "rotulo": "Ranque espacial dos eventos",
+      "descricao": "Posição do recorte entre todos os da mesma camada no país pelo número de eventos em 2025 (1 = mais eventos). Compara áreas entre si, sem olhar para anos anteriores.",
+      "fonte": "Eventos de fogo, Programa Queimadas, INPE"
+    },
+    {
+      "id": "ev_dur_media",
+      "grupo": "eventos",
+      "rotulo": "Duração média dos eventos",
+      "descricao": "Duração média dos eventos de 2025, em dias, do primeiro ao último dia de cada evento. Ficam de fora os eventos acima de 15 dias (percentil 99 do país) e os recortes com menos de 5 eventos.",
+      "fonte": "Eventos de fogo, Programa Queimadas, INPE"
+    },
+    {
+      "id": "ev_frentes",
+      "grupo": "eventos",
+      "rotulo": "Frentes de fogo",
+      "descricao": "Número de frentes de fogo dos eventos de 2025. Um evento pode ter várias frentes ativas ao mesmo tempo.",
+      "fonte": "Eventos de fogo, Programa Queimadas, INPE"
+    },
+    {
+      "id": "ev_frentes_ranque",
+      "grupo": "eventos",
+      "rotulo": "Ranque espacial das frentes",
+      "descricao": "Posição do recorte entre todos os da mesma camada no país pelo número de frentes de fogo em 2025 (1 = mais frentes). Compara áreas entre si, sem olhar para anos anteriores.",
+      "fonte": "Eventos de fogo, Programa Queimadas, INPE"
+    }
+  ]
+}

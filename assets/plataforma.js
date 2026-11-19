@@ -169,6 +169,7 @@ const estado = {
   gfaMetrica: 'n_incendios',   // metrica do GFA no grafico do painel direito
   camadasPorRid: {},   // rid -> layer do Leaflet, para dar zoom pela busca
   selecionado: null,   // rid aberto no painel direito, para redesenhar ao trocar de variavel
+  descricoes: {},      // id da variavel -> {descricao, fonte}, de assets/variaveis.json
 };
 
 let mapa, camadaLeaflet, camadaBase;
@@ -1094,6 +1095,10 @@ function montarOpcoes(alvo, itens, atual, aoTrocar) {
     b.type = 'button';
     b.setAttribute('aria-pressed', String(it.id === atual));
     b.innerHTML = `<span>${it.rotulo}</span>${it.conta ? `<small>${it.conta}</small>` : ''}`;
+    // a variavel escolhida abre para baixo com a descricao (assets/variaveis.json): sem balao,
+    // para funcionar igual no celular
+    const d = it.id === atual && estado.descricoes[it.id];
+    if (d) b.insertAdjacentHTML('beforeend', `<span class="desc">${d.descricao}<em>Fonte: ${d.fonte}</em></span>`);
     b.onclick = () => aoTrocar(it.id);
     alvo.appendChild(b);
   });
@@ -1347,7 +1352,7 @@ async function trocarCamada(id) {
 
 function trocarVariavel(id) {
   estado.variavel = id;
-  if (TELA_PEQUENA.matches) gaveta('esq', false);   // escolheu: volta para o mapa
+  // no celular a gaveta fica aberta: a descricao da variavel abre embaixo dela, e o toque fora fecha
   calcularFaixa();
   desenhar(false);
   montarControles();
@@ -1490,6 +1495,11 @@ async function iniciar() {
 
   ocupado(true, 'Carregando…');
   estado.meta = await json('meta.json');
+  // descricoes das variaveis: o mesmo arquivo da pagina inicial; sem ele, o menu so nao abre
+  try {
+    const r = await fetch('assets/variaveis.json?v=' + VERSAO_DADOS);
+    estado.descricoes = Object.fromEntries((await r.json()).variaveis.map(v => [v.id, v]));
+  } catch (e) { estado.descricoes = {}; }
   $('#periodo').textContent = 'Período ' + estado.meta.periodo_curto + ' · ' + estado.meta.periodo_extenso;
 
   const url = new URLSearchParams(location.search);

@@ -73,6 +73,17 @@ button, input { font: inherit; color: inherit; }
 .grupo:first-child { margin-top: 0; }
 .opcao small { font-size: 12px; color: var(--suave); font-variant-numeric: tabular-nums; }
 .opcao[aria-pressed="true"] small { color: color-mix(in srgb, var(--sobre-selecionado) 65%, transparent); }
+/* descricao da variavel escolhida: abre embaixo do nome, em fonte menor */
+.opcao { flex-wrap: wrap; }
+.opcao .desc {
+  flex-basis: 100%; margin-top: 5px; font-size: 12px; line-height: 1.45; font-weight: 400;
+  color: color-mix(in srgb, var(--sobre-selecionado) 92%, transparent);
+  animation: abre-desc .18s ease-out;
+}
+.opcao .desc em { display: block; margin-top: 4px; font-style: normal; font-size: 11px;
+  color: color-mix(in srgb, var(--sobre-selecionado) 78%, transparent); }
+@keyframes abre-desc { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .opcao .desc { animation: none; } }
 
 /* campos */
 .campo {
