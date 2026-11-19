@@ -328,13 +328,16 @@ a,button,summary{touch-action:manipulation}
 .com-tablet .titulo{font-size:clamp(36px,3.8vw,56px);max-width:none}
 .com-tablet .tablet{position:sticky;top:110px}
 @media(max-width:960px){.duplo.com-tablet{grid-template-columns:1fr}.com-tablet .tablet{position:static}}
-.ipad{display:block;position:relative;padding:2.1%;border-radius:clamp(18px,3.2vw,44px);
+/* medidas proporcionais a largura do tablet (cqw), como num iPad Pro: aro de 3% e cantos
+   concentricos, o raio da tela = raio externo menos o aro */
+.tablet{container-type:inline-size;--aro:3cqw;--raio:6.2cqw}
+.ipad{display:block;position:relative;padding:var(--aro);border-radius:var(--raio);
   background:linear-gradient(145deg,#2a2c33,#15161b);box-shadow:0 0 0 1.5px #3a3c44 inset,0 0 0 1px rgba(255,255,255,.08),0 40px 80px -30px rgba(0,0,0,.7);
   transition:transform .4s cubic-bezier(.2,.7,.3,1),box-shadow .4s}
-.ipad::before{content:'';position:absolute;top:calc(1.05% - 3px);left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;
+.ipad::before{content:'';position:absolute;top:calc(var(--aro) / 2 - 3.5px);left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;
   background:radial-gradient(circle at 35% 35%,#3d4a66,#0d0f14 70%)}
-.ipad .quadro{display:block;width:100%;height:auto;border-radius:clamp(5px,.8vw,12px);transition:opacity .7s ease}
-.ipad .quadro:not(:first-child){position:absolute;left:2.1%;top:2.1%;width:95.8%}
+.ipad .quadro{display:block;width:100%;height:auto;border-radius:calc(var(--raio) - var(--aro));transition:opacity .7s ease}
+.ipad .quadro:not(:first-child){position:absolute;left:var(--aro);top:var(--aro);width:calc(100% - 2 * var(--aro))}
 .ipad .quadro:not(.ativo){opacity:0}
 .pontos{display:flex;justify-content:center;gap:4px;margin-top:22px}
 .pontos button{width:32px;height:32px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
@@ -345,7 +348,7 @@ a,button,summary{touch-action:manipulation}
 .ipad:hover{transform:translateY(-3px);box-shadow:0 0 0 1.5px #3a3c44 inset,0 0 0 1px rgba(249,160,63,.35),0 50px 90px -30px rgba(0,0,0,.75)}
 .ipad:focus-visible{outline:3px solid var(--laranja);outline-offset:6px}
 @media(prefers-reduced-motion:reduce){.ipad,.ipad .quadro{transition:none}.ipad:hover{transform:none}}
-@media(max-width:700px){.ipad{padding:2.6%}.ipad .quadro:not(:first-child){left:2.6%;top:2.6%;width:94.8%}}
+
 </style>
 <script type="application/ld+json">
 {
