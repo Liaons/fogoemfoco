@@ -197,6 +197,7 @@ async function json(caminho) {
 function ocupado(ligado, texto) {
   const el = $('#carregando');
   el.hidden = !ligado;
+  $('#mapa').setAttribute('aria-busy', String(ligado));   // leitores de tela esperam o fim da carga
   if (texto) el.textContent = texto;
 }
 

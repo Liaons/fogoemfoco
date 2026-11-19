@@ -32,7 +32,7 @@
 <link rel="stylesheet" href="assets/fontes/fontes.css?v=7b741297">
 <link rel="stylesheet" href="assets/leaflet.min.css?v=a5aec224">
 <link rel="stylesheet" href="assets/identidade.css?v=4b44206a">
-<link rel="stylesheet" href="assets/plataforma.css?v=d583324b">
+<link rel="stylesheet" href="assets/plataforma.css?v=9049515c">
 <link rel="stylesheet" href="assets/downloads.css?v=2c227945">
 <script type="application/ld+json">
 {
@@ -88,7 +88,7 @@
     </aside>
 
     <div class="envolve-mapa">
-      <div id="mapa"></div>
+      <div id="mapa" role="region" aria-label="Mapa do Brasil com a variável escolhida; a lista do painel à direita e a busca por nome dão o mesmo acesso às áreas" aria-describedby="legenda-corpo"></div>
       <div class="alca esq" data-lado="esq" title="Arraste para alargar ou estreitar a barra"></div>
       <div class="alca dir" data-lado="dir" title="Arraste para alargar ou estreitar o painel"></div>
       <button class="aba esq" type="button" data-lado="esq" aria-label="Recolher a barra de variáveis" title="Recolher a barra"></button>
@@ -112,7 +112,7 @@
         <summary>Legenda</summary>
         <div class="corpo" id="legenda-corpo"></div>
       </details>
-      <div class="carregando" id="carregando" hidden>Carregando…</div>
+      <div class="carregando" id="carregando" role="status" aria-live="polite" hidden>Carregando…</div>
     </div>
 
     <div class="veu-movel" id="veu-movel" hidden></div>
@@ -129,7 +129,7 @@
 <script src="assets/topojson.min.js?v=9b737e03"></script>
 <script src="assets/chart.umd.min.js?v=49aef4c2"></script>
 <script src="assets/tema.js?v=6d5e7a29"></script>
-<script src="assets/plataforma.js?v=24803eb4"></script>
+<script src="assets/plataforma.js?v=670488f5"></script>
 <div class="janela-download" id="janela-download" role="dialog" aria-modal="true" aria-labelledby="titulo-download" hidden>
   <div class="caixa-download">
     <header><b id="titulo-download">Baixar dados e análises</b>

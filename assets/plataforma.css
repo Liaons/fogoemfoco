@@ -3,6 +3,7 @@ html, body { height: 100%; }
 body {
   margin: 0; font-family: var(--sans); font-size: 15px; color: var(--texto);
   background: var(--fundo); overflow: hidden; -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;   /* arrastar o mapa no celular nao recarrega a pagina */
 }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; line-height: 1.1; letter-spacing: .005em; }
 button, input { font: inherit; color: inherit; }
