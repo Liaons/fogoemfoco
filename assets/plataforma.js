@@ -1211,8 +1211,13 @@ function legendaHTML(def, faixaAtual, regs) {
   regs.forEach(r => { const v = semDado(r, def); if (v) vazios.set(v[1], v[0]); });
   const linhas = [...vazios].map(([rot, tok]) =>
     `<span class="linha"><i style="background:${css(tok)}"></i>${rot}</span>`).join('');
+  // o nome da variavel abre a legenda: no celular a barra de variaveis fica fechada e a
+  // legenda e o unico lugar que diz o que o mapa mostra
+  const nome = def.grupo === 'ranques' ? `Ranque histórico: ${def.rotulo.toLowerCase()}` : def.rotulo;
   return `
-    <span class="titulo-leg">${titulo}</span>
+    ${titulo.startsWith(def.rotulo)
+      ? `<span class="nome-leg">${titulo}</span>`
+      : `<span class="nome-leg">${nome}</span><span class="titulo-leg">${titulo}</span>`}
     ${faixa ? `<span class="faixa" style="background:${faixa}"></span>` : ''}
     ${baixo}
     ${linhas}`;

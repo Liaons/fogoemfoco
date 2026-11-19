@@ -223,6 +223,7 @@ button, input { font: inherit; color: inherit; }
 
 /* legenda: titulo e rotulos de cada classe embaixo dos blocos */
 .legenda .titulo-leg { font-size: 11.5px; color: var(--suave); line-height: 1.3; }
+.legenda .nome-leg { display: block; font-size: 13px; font-weight: 700; color: var(--texto); line-height: 1.25; margin-bottom: 2px; }
 .legenda .marcas { display: grid; font-size: 10px; color: var(--suave); text-align: center; margin: -2px 0 3px; }
 .legenda .marcas span { white-space: nowrap; }
 
