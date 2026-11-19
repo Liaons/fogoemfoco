@@ -325,8 +325,8 @@ a,button,summary{touch-action:manipulation}
 /* panorama: a plataforma num tablet, passando por quatro telas reais */
 .duplo.com-tablet{grid-template-columns:minmax(0,.78fr) minmax(0,1.5fr);gap:56px;align-items:start}
 /* avanca na margem direita ate 110 px, e o tablet nunca passa de 820 px, mesmo em telas muito largas */
-@media(min-width:1241px){.com-tablet .tablet{margin-right:max(calc((1160px - 100vw) / 2 + 24px), -110px)}}
-.com-tablet .tablet{max-width:820px;margin-left:auto}
+.com-tablet .tablet{--sangria:0px;width:min(820px, calc(100% - var(--sangria)));margin:0 var(--sangria) 0 auto}
+@media(min-width:1241px){.com-tablet .tablet{--sangria:max(calc((1160px - 100vw) / 2 + 24px), -110px)}}
 .com-tablet .titulo{font-size:clamp(36px,3.8vw,56px);max-width:none}
 .com-tablet .tablet{position:sticky;top:110px}
 @media(max-width:960px){.duplo.com-tablet{grid-template-columns:1fr}.com-tablet .tablet{position:static}}
