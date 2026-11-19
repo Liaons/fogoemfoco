@@ -20,6 +20,8 @@
   /* marca */
   --laranja: #ee5911;
   --laranja-acao: #c9450c;
+  --botao-laranja: #c9450c;        /* fundo de botao com texto branco, igual nos dois temas (4,8:1) */
+  --botao-laranja-hover: #a8390a;
   --sobre-acao: #ffffff;   /* texto sobre o botao primario */
   --laranja-claro: #f67e33;
   --ambar: #f9a03f;

@@ -1498,13 +1498,13 @@ async function iniciar() {
   trocarBase();
 
   ocupado(true, 'Carregando…');
+  // descricoes das variaveis (mesmo arquivo da pagina inicial), buscadas junto com meta.json.
+  // Sem carimbo: o arquivo muda sem mudar dados/, entao revalida a cada visita.
+  const descricoes = fetch('assets/variaveis.json', { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : null).catch(() => null);
   estado.meta = await json('meta.json');
-  // descricoes das variaveis: o mesmo arquivo da pagina inicial; sem ele, o menu so nao abre
-  try {
-    // sem carimbo: o arquivo muda sem mudar dados/, entao revalida a cada visita
-    const r = await fetch('assets/variaveis.json', { cache: 'no-cache' });
-    estado.descricoes = Object.fromEntries((await r.json()).variaveis.map(v => [v.id, v]));
-  } catch (e) { estado.descricoes = {}; }
+  const d = await descricoes;
+  if (d) estado.descricoes = Object.fromEntries(d.variaveis.map(v => [v.id, v]));
   $('#periodo').textContent = 'Período ' + estado.meta.periodo_curto + ' · ' + estado.meta.periodo_extenso;
 
   const url = new URLSearchParams(location.search);

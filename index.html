@@ -21,14 +21,11 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Fogo em Foco: panorama do fogo no Brasil, 2025-2026">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Fogo em Foco 2025-2026: panorama do fogo no Brasil">
-<meta name="twitter:description" content="Área queimada, incêndios, focos de calor, eventos de fogo e clima de 2025-2026 por estado, município, bioma, unidade de conservação e terra indígena.">
-<meta name="twitter:image" content="https://www.fogoemfoco.org/img/compartilhar.jpg">
 <link rel="stylesheet" href="assets/fontes/fontes.css?v=7b741297">
 <style>
 :root{
   --tinta:#0a0c1c; --tinta-2:#111533; --creme:#f6f2ec; --creme-2:#efe9e0;
-  --laranja:#ee5911; --laranja-esc:#c9450c; --ambar:#f9a03f;
+  --laranja:#ee5911; --laranja-esc:#c9450c; --laranja-hover:#a8390a; --laranja-texto:#ad3b09; --ambar:#f9a03f;
   --azul:#1b1e5d; --claro:#f6f2ec; --suave:#8d90a8; --suave-claro:#6a6d84;
   --display:'Big Shoulders Display',Impact,sans-serif;
   --sans:'Instrument Sans',system-ui,sans-serif;
@@ -102,7 +99,7 @@ a{color:inherit;text-decoration:none}
 .botao{display:inline-flex;align-items:center;gap:12px;background:var(--laranja-esc);color:#fff;
        border-radius:999px;padding:16px 30px;font-weight:500;font-size:16px;
        transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s,background .3s}
-.botao:hover{transform:translateY(-2px);background:#a8390a;box-shadow:0 12px 34px rgba(238,89,17,.28)}
+.botao:hover{transform:translateY(-2px);background:var(--laranja-hover);box-shadow:0 12px 34px rgba(238,89,17,.28)}
 .botao .seta{transition:transform .3s}
 .botao:hover .seta{transform:translateX(5px)}
 .link-simples{display:inline-flex;align-items:center;gap:10px;color:var(--suave);font-size:16px;padding:16px 8px}
@@ -131,10 +128,11 @@ a{color:inherit;text-decoration:none}
 
 /* seção clara */
 .claro{background:var(--creme);color:#14162c}
-.claro .rotulo{color:#ad3b09}
+.claro .rotulo{color:var(--laranja-texto)}
 .rotulo{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ambar);margin-bottom:22px}
 .secao{padding:130px 0}
 .titulo{font-size:clamp(40px,6vw,84px);max-width:15ch}
+.titulo.menor{font-size:clamp(30px,3.4vw,50px);max-width:none}
 .intro{max-width:56ch;font-size:18px;color:#4d5068;margin-top:26px}
 
 /* cartões */
@@ -292,8 +290,7 @@ a.inst:focus-visible .cor{opacity:1}
 .ficha .ref b{color:var(--claro);font-weight:600}
 .ficha .acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
 .ficha .acoes a{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:999px;font-size:14.5px;font-weight:600;
-  border:1px solid rgba(255,255,255,.22);transition:background .25s,border-color .25s}
-.ficha .acoes a{border-color:rgba(255,255,255,.5)}
+  border:1px solid rgba(255,255,255,.5);transition:background .25s,border-color .25s}
 .ficha .acoes a.prim{background:#fff;border-color:#fff;color:var(--laranja-esc)}
 .ficha .acoes a:hover{background:var(--tinta);border-color:var(--tinta);color:#fff}
 .ficha .acoes a:focus-visible{outline:2px solid #fff;outline-offset:3px}
@@ -447,7 +444,8 @@ body.parado .trilho{animation-play-state:paused}
       <a href="#panorama">Panorama</a>
       <a href="#recortes">Recortes</a>
       <a href="#metodo">Método</a>
-      <a href="#relatorios">Relatórios</a><a href="#rede">Rede</a>
+      <a href="#relatorios">Relatórios</a>
+      <a href="#rede">Rede</a>
       <a href="#dados">Dados</a>
     </nav>
     <a class="cta" href="plataforma.html"><span class="so-desktop">Abrir a plataforma</span><span class="so-mobile">Plataforma</span> <span class="seta">→</span></a>
@@ -544,7 +542,7 @@ body.parado .trilho{animation-play-state:paused}
     <div class="duplo">
       <div class="rev">
         <div class="rotulo">Método</div>
-        <h2 class="titulo" style="font-size:clamp(30px,3.4vw,50px);max-width:none">O período de análise vai de março a fevereiro</h2>
+        <h2 class="titulo menor">O período de análise vai de março a fevereiro</h2>
         <p class="intro" style="color:var(--suave)">A estação seca atravessa a virada do ano civil na maior
         parte do país, e contar de janeiro a dezembro dividiria um mesmo período de fogo entre dois anos.
         A área queimada vem do MODIS MCD64A1, as métricas dos incêndios do Global Fire Atlas, os focos
@@ -569,7 +567,7 @@ body.parado .trilho{animation-play-state:paused}
     <div class="cabeca rev">
       <div>
         <div class="rotulo">Relatórios anteriores</div>
-        <h2 class="titulo" id="titulo-relatorios" style="font-size:clamp(30px,3.4vw,50px);max-width:none">As edições do Fogo em Foco</h2>
+        <h2 class="titulo menor" id="titulo-relatorios">As edições do Fogo em Foco</h2>
       </div>
       <div class="setas" hidden>
         <button type="button" data-dir="-1" aria-label="Edição anterior"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -601,7 +599,7 @@ body.parado .trilho{animation-play-state:paused}
   <div class="env">
     <div class="rev">
       <div class="rotulo">Quem realiza</div>
-      <h2 class="titulo" style="font-size:clamp(30px,3.4vw,50px);max-width:none">Rede BRASA de Pesquisa
+      <h2 class="titulo menor">Rede BRASA de Pesquisa
       e os Corpos de Bombeiros Militares dos 27 estados</h2>
       <p class="intro" style="color:var(--suave-claro);max-width:62ch">O diagnóstico vem do sensoriamento remoto.
       O registro do que aconteceu em campo vem de quem combateu o fogo. A área queimada e as métricas de
@@ -705,11 +703,13 @@ document.querySelectorAll('.num').forEach(el => contador.observe(el));
 // "reduzir movimento" ligado fica so o quadro parado. Quando o celular bloqueia a
 // reproducao automatica (modo de economia de energia no iPhone, por exemplo), o video
 // comeca no primeiro toque ou rolagem.
+const menosMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const video = document.querySelector('.hero-video');
+let tocarVideo = () => {};
 if (video) {
   video.muted = true;            // alguns navegadores so contam o atributo, outros a propriedade
   video.playsInline = true;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (menosMovimento) {
     video.removeAttribute('autoplay');
     video.pause();
     video.classList.add('pronto');
@@ -719,6 +719,7 @@ if (video) {
     const tocar = () => { if (visivel && !document.body.classList.contains('parado')) video.play().catch(mostrar); };   // bloqueado: fica o poster
     if (video.readyState >= 3 && !video.paused) mostrar();
     video.addEventListener('playing', mostrar);
+    tocarVideo = tocar;
     tocar();
     // segunda chance no primeiro gesto, quando o navegador recusou o autoplay
     const gesto = () => { if (video.paused) tocar(); };
@@ -740,9 +741,9 @@ if (pausa) {
     pausa.setAttribute('aria-pressed', String(parar));
     pausa.setAttribute('aria-label', parar ? 'Retomar animações' : 'Pausar animações');
     document.body.classList.toggle('parado', parar);
-    if (video) { if (parar) video.pause(); else if (video.getBoundingClientRect().bottom > 0) video.play().catch(() => {}); }
+    if (video) { if (parar) video.pause(); else tocarVideo(); }
   };
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) pausa.hidden = true;
+  if (menosMovimento) pausa.hidden = true;
   pausa.addEventListener('click', () => aplicar(pausa.getAttribute('aria-pressed') !== 'true'));
 }
 
@@ -765,14 +766,18 @@ if (molde) {
 }
 
 // variaveis da plataforma na secao Metodo, lidas do mesmo arquivo do painel esquerdo da plataforma
-fetch('assets/variaveis.json', { cache: 'no-cache' }).then(r => r.json()).then(dados => {
+const blocoVar = document.querySelector('.variaveis');
+const carregarVariaveis = () => fetch('assets/variaveis.json', { cache: 'no-cache' }).then(r => r.json()).then(dados => {
   const alvo = document.getElementById('grupos-var');
   const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   alvo.innerHTML = dados.grupos.map(g => `<div class="grupo-var"><h4>${esc(g.rotulo)}</h4>` +
     dados.variaveis.filter(v => v.grupo === g.id).map(v =>
       `<details><summary>${esc(v.rotulo)}</summary><p>${esc(v.descricao)}<small>Fonte: ${esc(v.fonte)}</small></p></details>`
     ).join('') + '</div>').join('');
-}).catch(() => document.querySelector('.variaveis')?.remove());
+}).catch(() => blocoVar?.remove());
+if (blocoVar) new IntersectionObserver(([e], o) => {
+  if (e.isIntersecting) { o.disconnect(); carregarVariaveis(); }
+}, { rootMargin: '600px' }).observe(blocoVar);
 
 // estante de relatorios: as setas so aparecem quando ha mais edicoes do que cabem na tela
 const estante = document.querySelector('.estante');
@@ -790,8 +795,7 @@ if (estante && setas) {
     const b = ev.target.closest('button'); if (b) estante.scrollBy({ left: passo() * b.dataset.dir });
   });
   estante.addEventListener('scroll', atualizar, { passive: true });
-  addEventListener('resize', atualizar);
-  atualizar();
+  new ResizeObserver(atualizar).observe(estante);
 }
 </script>
 </body>
