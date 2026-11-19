@@ -240,12 +240,14 @@ a.inst:focus-visible .cor{opacity:1}
 @media(prefers-reduced-motion:reduce){.grupo-var summary::after{transition:none}}
 
 /* relatorios anteriores: estante horizontal, um livro por edicao */
-.relatorios{padding:120px 0 130px;background:var(--tinta-2);border-top:1px solid var(--borda);overflow:hidden}
+.relatorios{padding:120px 0 130px;overflow:hidden;color:#fff;
+  background:linear-gradient(180deg,var(--laranja-esc) 0%,#6a2a3c 48%,var(--azul) 100%)}
+.relatorios .rotulo{color:#ffd29a}
 .relatorios .cabeca{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:56px}
 .setas{display:flex;gap:10px}
 .setas button{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:transparent;color:var(--claro);
   cursor:pointer;display:grid;place-items:center;transition:background .25s,border-color .25s,opacity .25s}
-.setas button:hover:not(:disabled){background:var(--laranja);border-color:var(--laranja)}
+.setas button:hover:not(:disabled){background:#fff;border-color:#fff;color:var(--laranja-esc)}
 .setas button:disabled{opacity:.3;cursor:default}
 .setas button:focus-visible{outline:2px solid var(--ambar);outline-offset:3px}
 .setas[hidden]{display:none}
@@ -265,16 +267,17 @@ a.inst:focus-visible .cor{opacity:1}
   background:radial-gradient(closest-side,rgba(0,0,0,.55),transparent);z-index:-1}
 .livro:hover .capa,.livro:focus-visible .capa{transform:rotateY(-4deg)}
 .livro:focus-visible{outline:2px solid var(--ambar);outline-offset:8px;border-radius:4px}
-.ficha .ano{font-family:var(--display);font-weight:700;font-size:clamp(56px,7vw,96px);line-height:.9;color:var(--ambar)}
+.ficha .ano{font-family:var(--display);font-weight:700;font-size:clamp(56px,7vw,96px);line-height:.9;color:#ffd29a}
 .ficha .nome{font-family:var(--display);font-weight:600;font-size:clamp(24px,2.4vw,32px);line-height:1.05;margin-top:10px}
-.ficha .ref{margin-top:24px;padding-left:16px;border-left:2px solid var(--laranja);font-size:15px;line-height:1.65;color:#c3c5d4;max-width:52ch}
+.ficha .ref{margin-top:24px;padding-left:16px;border-left:2px solid #ffd29a;font-size:15px;line-height:1.65;color:#f3e7ec;max-width:52ch}
 .ficha .ref b{color:var(--claro);font-weight:600}
 .ficha .acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
 .ficha .acoes a{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:999px;font-size:14.5px;font-weight:600;
   border:1px solid rgba(255,255,255,.22);transition:background .25s,border-color .25s}
-.ficha .acoes a.prim{background:var(--laranja);border-color:var(--laranja)}
-.ficha .acoes a:hover{background:var(--laranja-esc);border-color:var(--laranja-esc)}
-.ficha .acoes a:focus-visible{outline:2px solid var(--ambar);outline-offset:3px}
+.ficha .acoes a{border-color:rgba(255,255,255,.5)}
+.ficha .acoes a.prim{background:#fff;border-color:#fff;color:var(--laranja-esc)}
+.ficha .acoes a:hover{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.ficha .acoes a:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .ficha .acoes small{font-weight:400;opacity:.75}
 @media(max-width:760px){
   .relatorios{padding:90px 0 100px}
