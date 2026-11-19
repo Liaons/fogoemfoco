@@ -122,7 +122,7 @@
         (e.abrangencia === 'uf' && e.camadas.includes('Biomas') ? ' · biomas inteiros' : '');
       botao.disabled = false;
     } catch (err) {
-      if (meu === seqPrevia) alvo.textContent = 'Não foi possível calcular a prévia: ' + err.message;
+      if (meu === seqPrevia) alvo.textContent = 'Não foi possível calcular a prévia. Tente outra combinação ou recarregue a página. (' + err.message + ')';
     }
   }
 
@@ -227,7 +227,7 @@
       salvarArquivo(D.zipar(arquivos), base + '.zip', 'application/zip');
       previa.textContent = `Pronto: ${nf(tabela.linhas.length)} linhas.`;
     } catch (err) {
-      previa.textContent = 'Não foi possível gerar o arquivo: ' + err.message;
+      previa.textContent = 'Não foi possível gerar o arquivo. Tente de novo; se continuar, recarregue a página. (' + err.message + ')';
     } finally {
       gerando = false; conteudo.inert = false;
       botao.disabled = false; botao.textContent = 'Baixar';
@@ -267,7 +267,7 @@
       .map(v => `<option value="${v.id}"${v.id === fic.variavel ? ' selected' : ''}>${escHtml(v.rotulo)}</option>`).join('')}</optgroup>`).join('');
     return `
       <div class="passo-dl"><h4>1 · Área</h4><div class="abrang-dl col">
-        ${radio('aberta', fic.aberta ? `A aberta no painel: ${nomeArea(fic.aberta)}` : 'A aberta no painel <small>(nenhuma aberta)</small>', !fic.aberta)}
+        ${radio('aberta', fic.aberta ? `A área aberta no painel: ${nomeArea(fic.aberta)}` : 'A área aberta no painel <small>(nenhuma no momento)</small>', !fic.aberta)}
         ${radio('outra', fic.outra ? `Outra: ${nomeArea(fic.outra)}` : 'Outra área')}
         <div class="busca-ficha"${fic.modo === 'outra' ? '' : ' hidden'}>
           <input type="search" id="busca-ficha" placeholder="Buscar estado, município, bioma, UC ou TI" autocomplete="off"

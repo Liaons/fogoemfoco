@@ -572,7 +572,7 @@ function render(reg, sgfa, sclima, seventos) {
        completo, mas ainda não tem ranque, métricas de fogo nem série climática.</div></div>`
     : reg.estado_dado === 'fora'
     ? `<div class="bloco"><div class="aviso-dado"><b>Sem dado de área queimada.</b>
-       Esta feição não entrou na tabela de ranque, provavelmente por ser menor que o
+       Esta área não entrou na tabela de ranque, provavelmente por ser menor que o
        pixel de 500 m do sensor. Isso não significa que não tenha queimado.</div></div>`
     : reg.estado_dado === 'sem_fogo'
     ? `<div class="bloco"><div class="aviso-dado"><b>Sem registro de fogo em vegetação</b>
@@ -1030,7 +1030,7 @@ function montarFiltro() {
   const n = Object.keys(visiveis()).length;
   $('#ajuda-filtro').textContent = filtroAtivo()
     ? `Mostrando ${nf(n)} ${def.rotulo.toLowerCase()}: ${filtroRotulo()}.`
-    : def.filtro === 'uf' ? 'Filtre por estado para desenhar menos feições e navegar mais rápido.'
+    : def.filtro === 'uf' ? 'Filtre por estado para desenhar menos municípios e navegar mais rápido.'
     : estado.camada === 'UCs' ? 'Filtre pelo grupo ou pela categoria da unidade (CNUC).'
     : 'Homologadas: fases Homologada e Regularizada da FUNAI.';
 }
@@ -1066,7 +1066,7 @@ async function buscar() {
   achados.sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, 'pt-BR'));
 
   if (!achados.length) {
-    caixa.innerHTML = '<p class="ajuda">Nenhum resultado em nenhuma camada.</p>';
+    caixa.innerHTML = '<p class="ajuda">Nenhuma área com esse nome. Confira a grafia ou tente só parte do nome.</p>';
     return;
   }
   caixa.innerHTML = achados.slice(0, 40).map(a =>
@@ -1286,7 +1286,7 @@ function resumoCamada() {
     titulo1 = 'Meses de pico mais frequentes';
     const moda = top.length ? +top[0][0] : null;
     if (moda) numeros.push(`<div class="largo"><b><i class="amostra" style="background:${corMes(moda)}"></i>${
-      MESES_EXTENSO[moda - 1]}</b><small>mês de pico mais frequente (moda) entre as feições com área queimada</small></div>`);
+      MESES_EXTENSO[moda - 1]}</b><small>mês de pico mais frequente (moda) entre as áreas que queimaram</small></div>`);
     extra = `<p class="nota">Sem uma área selecionada, o mês de pico mostrado é a moda: o mês que mais se
       repete entre todos os polígonos ${filtroAtivo() ? 'filtrados' : 'da camada'} com área queimada na série.
       Clique numa área para ver o mês de pico dela.</p>`;
@@ -1308,7 +1308,7 @@ function resumoCamada() {
       numeros.push(`<div><b>${nf(vals.reduce((a, b) => a + b, 0), def.id === 'aq' ? 0 : 0)}${def.unidade}</b><small>no total</small></div>`);
     } else if (vals.length) {
       const media = vals.reduce((a, b) => a + b, 0) / vals.length;
-      numeros.push(`<div><b>${(def.escala === 'diferenca' || def.escala === 'anomalia' ? comSinal(media, casas) : nf(media, casas))}${def.unidade}</b><small>média das feições</small></div>`);
+      numeros.push(`<div><b>${(def.escala === 'diferenca' || def.escala === 'anomalia' ? comSinal(media, casas) : nf(media, casas))}${def.unidade}</b><small>média das áreas</small></div>`);
     }
     if (def.escala === 'anomalia' || def.escala === 'diferenca') {
       const acima = vals.filter(v => v > 0).length;
@@ -1331,9 +1331,9 @@ function resumoCamada() {
     </div>
     <div class="bloco">
       <h2>${titulo1}</h2>
-      <div class="lista-resumo">${lista || '<p class="nota">Nenhuma feição com dado.</p>'}</div>
+      <div class="lista-resumo">${lista || '<p class="nota">Nenhuma área com dado nesta variável.</p>'}</div>
       ${extra}
-      <p class="nota">Clique numa linha ou no mapa para ver os detalhes da feição.</p>
+      <p class="nota">Escolha uma linha ou uma área no mapa para ver os detalhes.</p>
     </div>`;
 }
 
@@ -1353,7 +1353,7 @@ async function trocarCamada(id) {
     montarControles();
     limparPainel();
   } catch (e) {
-    $('#painel').innerHTML = `<div class="vazio">Não foi possível carregar esta camada.<br><small>${e.message}</small></div>`;
+    $('#painel').innerHTML = `<div class="vazio">Não foi possível carregar esta camada. Confira a conexão e escolha o recorte de novo.<br><small>${e.message}</small></div>`;
   } finally {
     ocupado(false);
   }
@@ -1538,6 +1538,6 @@ async function iniciar() {
 
 iniciar().catch(e => avisar(
   `<b>Não foi possível carregar os dados.</b>
-   <p>${e.message}</p>
-   <p>Confira se a pasta <code>dados/</code> está ao lado de <code>plataforma.html</code>.
-   Se estiver faltando, rode os scripts de <code>codigos/</code> para gerá-la.</p>`));
+   <p>Confira a conexão e recarregue a página. Se o erro continuar, escreva para a equipe
+   pelo contato da página inicial.</p>
+   <p><small>${e.message}</small></p>`));
