@@ -1,10 +1,10 @@
 /* Botao na barra do topo e janela "Baixar dados e analises". */
 .barra .baixar {
   display: inline-flex; white-space: nowrap; align-items: center; gap: 7px; cursor: pointer;
-  border: 1px solid var(--laranja); background: var(--laranja); color: #fff; border-radius: 999px;
+  border: 1px solid var(--botao-laranja); background: var(--botao-laranja); color: #fff; border-radius: 999px;
   padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 600;
 }
-.barra .baixar:hover { filter: brightness(1.08); }
+.barra .baixar:hover { background: var(--botao-laranja-hover); border-color: var(--botao-laranja-hover); }
 @media (max-width: 820px) { .barra .periodo + .baixar { margin-left: auto; } }
 @media (max-width: 560px) {
   .barra .baixar .rotulo { display: none; }
@@ -49,7 +49,7 @@
 .rodape-dl { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px;
   padding: 11px 16px; margin: 0 -16px; background: var(--superficie-2); border-top: 1px solid var(--borda);
   font-size: 12.5px; color: var(--suave); }
-.rodape-dl button { border: 0; background: var(--laranja); color: #fff; border-radius: 8px; padding: 8px 16px;
+.rodape-dl button { border: 0; background: var(--botao-laranja); color: #fff; border-radius: 8px; padding: 8px 16px;
   font: inherit; font-weight: 700; cursor: pointer; }
 .rodape-dl button[disabled] { opacity: .55; cursor: progress; }
 .aviso-dl { padding: 18px 0; color: var(--suave); font-size: 14px; line-height: 1.55; }
@@ -59,4 +59,4 @@
 .busca-ficha { padding-left: 22px; }
 .busca-ficha input { width: 100%; font: inherit; font-size: 13.5px; padding: 6px 9px; border-radius: 7px;
   border: 1px solid var(--borda); background: var(--superficie-2); color: var(--texto); }
-#var-ficha { max-width: 100%; }
+#var-ficha { max-width: 100%; background: var(--superficie-2); color: var(--texto); }

@@ -3,8 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plataforma do Fogo em Foco</title>
+<title>Plataforma Fogo em Foco: mapa do fogo no Brasil 2025-2026</title>
 <meta name="description" content="Mapa interativo do Fogo em Foco: ranque de área queimada e métricas de fogo por estado, município, bioma, unidade de conservação e terra indígena.">
+<link rel="canonical" href="https://www.fogoemfoco.org/plataforma.html">
+<meta name="theme-color" content="#0a0c1c">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="img/icone-48.png">
+<link rel="apple-touch-icon" href="img/icone-180.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Fogo em Foco">
+<meta property="og:url" content="https://www.fogoemfoco.org/plataforma.html">
+<meta property="og:title" content="Plataforma Fogo em Foco: mapa do fogo no Brasil 2025-2026">
+<meta property="og:description" content="Mapa interativo do Fogo em Foco: ranque de área queimada e métricas de fogo por estado, município, bioma, unidade de conservação e terra indígena.">
+<meta property="og:image" content="https://www.fogoemfoco.org/img/compartilhar.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fogo em Foco: panorama do fogo no Brasil, 2025-2026">
+<meta name="twitter:card" content="summary_large_image">
 <script>
   // Aplica o tema antes da primeira pintura, senao a pagina pisca em branco
   // antes de escurecer.
@@ -15,11 +31,37 @@
 </script>
 <link rel="stylesheet" href="assets/fontes/fontes.css?v=7b741297">
 <link rel="stylesheet" href="assets/leaflet.min.css?v=a5aec224">
-<link rel="stylesheet" href="assets/identidade.css?v=43343822">
-<link rel="stylesheet" href="assets/plataforma.css?v=2496d9fc">
-<link rel="stylesheet" href="assets/downloads.css?v=48f177c5">
+<link rel="stylesheet" href="assets/identidade.css?v=4b44206a">
+<link rel="stylesheet" href="assets/plataforma.css?v=4ce1b720">
+<link rel="stylesheet" href="assets/downloads.css?v=a0e85590">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "WebApplication",
+ "name": "Plataforma Fogo em Foco",
+ "url": "https://www.fogoemfoco.org/plataforma.html",
+ "applicationCategory": "ReferenceApplication",
+ "operatingSystem": "Navegador web",
+ "inLanguage": "pt-BR",
+ "isAccessibleForFree": true,
+ "offers": {
+  "@type": "Offer",
+  "price": "0",
+  "priceCurrency": "BRL"
+ },
+ "description": "Mapa interativo do Fogo em Foco: ranque de área queimada e métricas de fogo por estado, município, bioma, unidade de conservação e terra indígena.",
+ "publisher": {
+  "@type": "Organization",
+  "name": "Rede BRASA de Pesquisa"
+ },
+ "isPartOf": {
+  "@id": "https://www.fogoemfoco.org/#site"
+ }
+}
+</script>
 </head>
 <body>
+<a class="pular" href="#controles">Pular para as variáveis</a>
 <div class="app">
 
   <header class="barra">
@@ -36,9 +78,9 @@
     </button>
   </header>
 
-  <div class="corpo">
+  <main class="corpo">
 
-    <aside class="controles" id="controles">
+    <aside class="controles" id="controles" tabindex="-1">
       <div class="bloco">
         <h2>Variável</h2>
         <div class="opcoes" id="variaveis"></div>
@@ -47,7 +89,7 @@
     </aside>
 
     <div class="envolve-mapa">
-      <div id="mapa"></div>
+      <div id="mapa" role="region" aria-label="Mapa do Brasil com a variável escolhida; a lista do painel à direita e a busca por nome dão o mesmo acesso às áreas" aria-describedby="legenda-corpo"></div>
       <div class="alca esq" data-lado="esq" title="Arraste para alargar ou estreitar a barra"></div>
       <div class="alca dir" data-lado="dir" title="Arraste para alargar ou estreitar o painel"></div>
       <button class="aba esq" type="button" data-lado="esq" aria-label="Recolher a barra de variáveis" title="Recolher a barra"></button>
@@ -71,24 +113,24 @@
         <summary>Legenda</summary>
         <div class="corpo" id="legenda-corpo"></div>
       </details>
-      <div class="carregando" id="carregando" hidden>Carregando…</div>
+      <div class="carregando" id="carregando" role="status" aria-live="polite" hidden>Carregando…</div>
     </div>
 
     <div class="veu-movel" id="veu-movel" hidden></div>
     <button class="fechar-painel" id="fechar-painel" type="button" aria-label="Fechar o painel">Fechar ✕</button>
     <aside class="painel" id="painel">
-      <div class="vazio">Clique em qualquer área do mapa para ver a série histórica,
+      <div class="vazio">Escolha uma área no mapa, ou busque pelo nome, para ver a série histórica,
       a anomalia climática do ano e as métricas de fogo.</div>
     </aside>
 
-  </div>
+  </main>
 </div>
 
 <script src="assets/leaflet.min.js?v=576bf423"></script>
 <script src="assets/topojson.min.js?v=9b737e03"></script>
 <script src="assets/chart.umd.min.js?v=49aef4c2"></script>
 <script src="assets/tema.js?v=6d5e7a29"></script>
-<script src="assets/plataforma.js?v=995d19e6"></script>
+<script src="assets/plataforma.js?v=f225e563"></script>
 <div class="janela-download" id="janela-download" role="dialog" aria-modal="true" aria-labelledby="titulo-download" hidden>
   <div class="caixa-download">
     <header><b id="titulo-download">Baixar dados e análises</b>
@@ -101,6 +143,6 @@
   </div>
 </div>
 <script src="assets/downloads-nucleo.js?v=403f0801"></script>
-<script src="assets/downloads.js?v=229dacc4"></script>
+<script src="assets/downloads.js?v=21af7a9c"></script>
 </body>
 </html>

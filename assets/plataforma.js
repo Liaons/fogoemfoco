@@ -169,6 +169,7 @@ const estado = {
   gfaMetrica: 'n_incendios',   // metrica do GFA no grafico do painel direito
   camadasPorRid: {},   // rid -> layer do Leaflet, para dar zoom pela busca
   selecionado: null,   // rid aberto no painel direito, para redesenhar ao trocar de variavel
+  descricoes: {},      // id da variavel -> {descricao, fonte}, de assets/variaveis.json
 };
 
 let mapa, camadaLeaflet, camadaBase;
@@ -196,6 +197,7 @@ async function json(caminho) {
 function ocupado(ligado, texto) {
   const el = $('#carregando');
   el.hidden = !ligado;
+  $('#mapa').setAttribute('aria-busy', String(ligado));   // leitores de tela esperam o fim da carga
   if (texto) el.textContent = texto;
 }
 
@@ -494,10 +496,18 @@ function ligarGavetas() {
   TELA_MEDIA.addEventListener('change', () => { gaveta('esq', false); gaveta('dir', false); });
 }
 
+// O endereco guarda recorte, variavel e area aberta: o link copiado abre a mesma vista.
+function guardarUrl() {
+  const p = new URLSearchParams({ camada: estado.camada, variavel: estado.variavel });
+  if (estado.selecionado) p.set('area', estado.selecionado);
+  history.replaceState(null, '', '?' + p);
+}
+
 async function selecionar(rid, comZoom, abrir = true) {
   const reg = estado.atributos[estado.camada][rid];
   if (!reg) return;
   estado.selecionado = rid;
+  guardarUrl();
   if (abrir && TELA_MEDIA.matches) gaveta('dir', true);
   const gfa = await serie('gfa', estado.camada, reg.chunk || null);
   const clima = await serie('clima', estado.camada, reg.chunk || null);
@@ -571,7 +581,7 @@ function render(reg, sgfa, sclima, seventos) {
        completo, mas ainda não tem ranque, métricas de fogo nem série climática.</div></div>`
     : reg.estado_dado === 'fora'
     ? `<div class="bloco"><div class="aviso-dado"><b>Sem dado de área queimada.</b>
-       Esta feição não entrou na tabela de ranque, provavelmente por ser menor que o
+       Esta área não entrou na tabela de ranque, provavelmente por ser menor que o
        pixel de 500 m do sensor. Isso não significa que não tenha queimado.</div></div>`
     : reg.estado_dado === 'sem_fogo'
     ? `<div class="bloco"><div class="aviso-dado"><b>Sem registro de fogo em vegetação</b>
@@ -1029,7 +1039,7 @@ function montarFiltro() {
   const n = Object.keys(visiveis()).length;
   $('#ajuda-filtro').textContent = filtroAtivo()
     ? `Mostrando ${nf(n)} ${def.rotulo.toLowerCase()}: ${filtroRotulo()}.`
-    : def.filtro === 'uf' ? 'Filtre por estado para desenhar menos feições e navegar mais rápido.'
+    : def.filtro === 'uf' ? 'Filtre por estado para desenhar menos municípios e navegar mais rápido.'
     : estado.camada === 'UCs' ? 'Filtre pelo grupo ou pela categoria da unidade (CNUC).'
     : 'Homologadas: fases Homologada e Regularizada da FUNAI.';
 }
@@ -1065,7 +1075,7 @@ async function buscar() {
   achados.sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, 'pt-BR'));
 
   if (!achados.length) {
-    caixa.innerHTML = '<p class="ajuda">Nenhum resultado em nenhuma camada.</p>';
+    caixa.innerHTML = '<p class="ajuda">Nenhuma área com esse nome. Confira a grafia ou tente só parte do nome.</p>';
     return;
   }
   caixa.innerHTML = achados.slice(0, 40).map(a =>
@@ -1094,6 +1104,14 @@ function montarOpcoes(alvo, itens, atual, aoTrocar) {
     b.type = 'button';
     b.setAttribute('aria-pressed', String(it.id === atual));
     b.innerHTML = `<span>${it.rotulo}</span>${it.conta ? `<small>${it.conta}</small>` : ''}`;
+    // a variavel escolhida abre para baixo com a descricao (assets/variaveis.json): sem balao,
+    // para funcionar igual no celular
+    const d = it.id === atual && estado.descricoes[it.id];
+    if (d) {
+      const desc = document.createElement('span'), fonte = document.createElement('em');
+      desc.className = 'desc'; desc.textContent = d.descricao; fonte.textContent = 'Fonte: ' + d.fonte;
+      desc.append(fonte); b.append(desc);
+    }
     b.onclick = () => aoTrocar(it.id);
     alvo.appendChild(b);
   });
@@ -1202,8 +1220,13 @@ function legendaHTML(def, faixaAtual, regs) {
   regs.forEach(r => { const v = semDado(r, def); if (v) vazios.set(v[1], v[0]); });
   const linhas = [...vazios].map(([rot, tok]) =>
     `<span class="linha"><i style="background:${css(tok)}"></i>${rot}</span>`).join('');
+  // o nome da variavel abre a legenda: no celular a barra de variaveis fica fechada e a
+  // legenda e o unico lugar que diz o que o mapa mostra
+  const nome = def.grupo === 'ranques' ? `Ranque histórico: ${def.rotulo.toLowerCase()}` : def.rotulo;
   return `
-    <span class="titulo-leg">${titulo}</span>
+    ${titulo.startsWith(def.rotulo)
+      ? `<span class="nome-leg">${titulo}</span>`
+      : `<span class="nome-leg">${nome}</span><span class="titulo-leg">${titulo}</span>`}
     ${faixa ? `<span class="faixa" style="background:${faixa}"></span>` : ''}
     ${baixo}
     ${linhas}`;
@@ -1231,6 +1254,7 @@ function limparPainel() {
   estado.graficos.forEach(g => g.destroy());
   estado.graficos = [];
   estado.selecionado = null;
+  guardarUrl();
   $('#painel').innerHTML = resumoCamada();
   $('#painel').querySelectorAll('[data-rid]').forEach(b => { b.onclick = () => selecionar(b.dataset.rid, true); });
 }
@@ -1272,7 +1296,7 @@ function resumoCamada() {
     titulo1 = 'Meses de pico mais frequentes';
     const moda = top.length ? +top[0][0] : null;
     if (moda) numeros.push(`<div class="largo"><b><i class="amostra" style="background:${corMes(moda)}"></i>${
-      MESES_EXTENSO[moda - 1]}</b><small>mês de pico mais frequente (moda) entre as feições com área queimada</small></div>`);
+      MESES_EXTENSO[moda - 1]}</b><small>mês de pico mais frequente (moda) entre as áreas que queimaram</small></div>`);
     extra = `<p class="nota">Sem uma área selecionada, o mês de pico mostrado é a moda: o mês que mais se
       repete entre todos os polígonos ${filtroAtivo() ? 'filtrados' : 'da camada'} com área queimada na série.
       Clique numa área para ver o mês de pico dela.</p>`;
@@ -1294,7 +1318,7 @@ function resumoCamada() {
       numeros.push(`<div><b>${nf(vals.reduce((a, b) => a + b, 0), def.id === 'aq' ? 0 : 0)}${def.unidade}</b><small>no total</small></div>`);
     } else if (vals.length) {
       const media = vals.reduce((a, b) => a + b, 0) / vals.length;
-      numeros.push(`<div><b>${(def.escala === 'diferenca' || def.escala === 'anomalia' ? comSinal(media, casas) : nf(media, casas))}${def.unidade}</b><small>média das feições</small></div>`);
+      numeros.push(`<div><b>${(def.escala === 'diferenca' || def.escala === 'anomalia' ? comSinal(media, casas) : nf(media, casas))}${def.unidade}</b><small>média das áreas</small></div>`);
     }
     if (def.escala === 'anomalia' || def.escala === 'diferenca') {
       const acima = vals.filter(v => v > 0).length;
@@ -1317,9 +1341,9 @@ function resumoCamada() {
     </div>
     <div class="bloco">
       <h2>${titulo1}</h2>
-      <div class="lista-resumo">${lista || '<p class="nota">Nenhuma feição com dado.</p>'}</div>
+      <div class="lista-resumo">${lista || '<p class="nota">Nenhuma área com dado nesta variável.</p>'}</div>
       ${extra}
-      <p class="nota">Clique numa linha ou no mapa para ver os detalhes da feição.</p>
+      <p class="nota">Escolha uma linha ou uma área no mapa para ver os detalhes.</p>
     </div>`;
 }
 
@@ -1339,7 +1363,7 @@ async function trocarCamada(id) {
     montarControles();
     limparPainel();
   } catch (e) {
-    $('#painel').innerHTML = `<div class="vazio">Não foi possível carregar esta camada.<br><small>${e.message}</small></div>`;
+    $('#painel').innerHTML = `<div class="vazio">Não foi possível carregar esta camada. Confira a conexão e escolha o recorte de novo.<br><small>${e.message}</small></div>`;
   } finally {
     ocupado(false);
   }
@@ -1347,7 +1371,8 @@ async function trocarCamada(id) {
 
 function trocarVariavel(id) {
   estado.variavel = id;
-  if (TELA_PEQUENA.matches) gaveta('esq', false);   // escolheu: volta para o mapa
+  guardarUrl();
+  // no celular a gaveta fica aberta: a descricao da variavel abre embaixo dela, e o toque fora fecha
   calcularFaixa();
   desenhar(false);
   montarControles();
@@ -1489,12 +1514,20 @@ async function iniciar() {
   trocarBase();
 
   ocupado(true, 'Carregando…');
+  // descricoes das variaveis (mesmo arquivo da pagina inicial), buscadas junto com meta.json.
+  // Sem carimbo: o arquivo muda sem mudar dados/, entao revalida a cada visita.
+  const descricoes = fetch('assets/variaveis.json', { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : null).catch(() => null);
   estado.meta = await json('meta.json');
+  const d = await descricoes;
+  if (d) estado.descricoes = Object.fromEntries(d.variaveis.map(v => [v.id, v]));
   $('#periodo').textContent = 'Período ' + estado.meta.periodo_curto + ' · ' + estado.meta.periodo_extenso;
 
   const url = new URLSearchParams(location.search);
   const pedida = url.get('camada');
   if (pedida && CAMADAS.some(c => c.id === pedida)) estado.camada = pedida;
+  const varPedida = url.get('variavel');
+  if (varPedida && VARIAVEIS.some(v => v.id === varPedida)) estado.variavel = varPedida;
 
   await garantirCamada(estado.camada);
   garantirVariavel();
@@ -1503,6 +1536,8 @@ async function iniciar() {
   montarControles();
   limparPainel();
   ocupado(false);
+  const areaPedida = url.get('area');
+  if (areaPedida && estado.atributos[estado.camada][areaPedida]) selecionar(areaPedida, true);
 
   $('#filtro-uf').addEventListener('change', (e) => trocarFiltro(e.target.value));
   let atraso;
@@ -1518,6 +1553,6 @@ async function iniciar() {
 
 iniciar().catch(e => avisar(
   `<b>Não foi possível carregar os dados.</b>
-   <p>${e.message}</p>
-   <p>Confira se a pasta <code>dados/</code> está ao lado de <code>plataforma.html</code>.
-   Se estiver faltando, rode os scripts de <code>codigos/</code> para gerá-la.</p>`));
+   <p>Confira a conexão e recarregue a página. Se o erro continuar, escreva para a equipe
+   pelo contato da página inicial.</p>
+   <p><small>${e.message}</small></p>`));
