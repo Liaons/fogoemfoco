@@ -175,9 +175,9 @@ a{color:inherit;text-decoration:none}
 .legenda-cal{margin-top:20px;font-size:13px;color:var(--suave);line-height:1.6}
 @media(max-width:700px){.mes i{height:44px}.mes span{font-size:8px}}
 
-.lista-num{list-style:none;padding:0;margin:34px 0 0}
-.lista-num li{display:flex;gap:20px;padding:20px 0;border-bottom:1px solid var(--borda);align-items:baseline}
-.lista-num b{font-family:var(--display);font-weight:700;font-size:30px;color:var(--laranja);min-width:56px}
+.lista-num{list-style:none;padding:0;margin:26px 0 0}
+.lista-num li{display:flex;gap:18px;padding:10px 0;border-bottom:1px solid var(--borda);align-items:baseline}
+.lista-num b{font-family:var(--display);font-weight:700;font-size:26px;color:var(--laranja);min-width:56px}
 .lista-num span{flex:1}
 .lista-num em{font-style:normal;color:var(--suave);font-size:15px;font-variant-numeric:tabular-nums}
 
@@ -323,8 +323,9 @@ a,button,summary{touch-action:manipulation}
 @media(max-width:700px){.colunas-rodape a,.fim .autor{padding:13px 0 10px}.ficha .acoes a{min-height:44px}.setas button{width:48px;height:48px}}
 
 /* panorama: a plataforma num tablet, passando por quatro telas reais */
-.duplo.com-tablet{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);align-items:start}
-.com-tablet .titulo{font-size:clamp(38px,4.4vw,64px);max-width:none}
+.duplo.com-tablet{grid-template-columns:minmax(0,.78fr) minmax(0,1.5fr);gap:56px;align-items:start}
+@media(min-width:1241px){.com-tablet .tablet{margin-right:calc((1160px - 100vw) / 2 + 24px)}}
+.com-tablet .titulo{font-size:clamp(36px,3.8vw,56px);max-width:none}
 .com-tablet .tablet{position:sticky;top:110px}
 @media(max-width:960px){.duplo.com-tablet{grid-template-columns:1fr}.com-tablet .tablet{position:static}}
 .ipad{display:block;position:relative;padding:2.1%;border-radius:clamp(18px,3.2vw,44px);
@@ -545,16 +546,16 @@ a,button,summary{touch-action:manipulation}
     <div class="tablet rev">
       <a class="ipad" href="plataforma.html?camada=Biomas&amp;variavel=aq_ranque" aria-label="Abrir a plataforma nesta vista">
         <img class="quadro ativo" data-href="plataforma.html?camada=Biomas&amp;variavel=aq_ranque" src="img/plataforma/1-biomas-1400.jpg"
-             srcset="img/plataforma/1-biomas-700.jpg 700w, img/plataforma/1-biomas-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 640px"
+             srcset="img/plataforma/1-biomas-700.jpg 700w, img/plataforma/1-biomas-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 820px"
              width="1400" height="1049" alt="Plataforma com o mapa dos biomas pelo ranque de área queimada e a lista à direita: Caatinga em 4º, Cerrado e Pampa em 12º, Amazônia e Pantanal em 23º">
         <img class="quadro" data-href="plataforma.html?camada=Biomas&amp;variavel=aq_ranque&amp;area=10000002" src="img/plataforma/2-caatinga-1400.jpg"
-             srcset="img/plataforma/2-caatinga-700.jpg 700w, img/plataforma/2-caatinga-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 640px"
+             srcset="img/plataforma/2-caatinga-700.jpg 700w, img/plataforma/2-caatinga-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 820px"
              width="1400" height="1049" loading="lazy" alt="Plataforma com a Caatinga aberta: 4º maior área queimada desde 2002, 1.541 km² no período, 108% acima da média">
         <img class="quadro" data-href="plataforma.html?camada=UF&amp;variavel=aq_ranque" src="img/plataforma/3-estados-1400.jpg"
-             srcset="img/plataforma/3-estados-700.jpg 700w, img/plataforma/3-estados-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 640px"
+             srcset="img/plataforma/3-estados-700.jpg 700w, img/plataforma/3-estados-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 820px"
              width="1400" height="1049" loading="lazy" alt="Plataforma com o mapa dos estados pelo ranque de área queimada; no topo da lista, Bahia em 4º, Piauí em 5º e Sergipe em 6º">
         <img class="quadro" data-href="plataforma.html?camada=UF&amp;variavel=aq_ranque&amp;area=60000025" src="img/plataforma/4-bahia-1400.jpg"
-             srcset="img/plataforma/4-bahia-700.jpg 700w, img/plataforma/4-bahia-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 640px"
+             srcset="img/plataforma/4-bahia-700.jpg 700w, img/plataforma/4-bahia-1400.jpg 1400w" sizes="(max-width:960px) 92vw, 820px"
              width="1400" height="1049" loading="lazy" alt="Plataforma com a Bahia aberta: 4º maior área queimada desde 2002, 1.622 km² no período, com as métricas dos incêndios e o gráfico anual">
       </a>
       <div class="pontos" role="group" aria-label="Telas da plataforma"><button type="button" aria-label="Ranque dos biomas" aria-current="true"></button><button type="button" aria-label="Caatinga"></button><button type="button" aria-label="Ranque dos estados"></button><button type="button" aria-label="Bahia"></button></div>
