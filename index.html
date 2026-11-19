@@ -319,6 +319,13 @@ a.inst:focus-visible .cor{opacity:1}
 body.parado .trilho{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.trilho{animation:none}}
 @media(max-width:700px){.pausa{right:18px;bottom:18px}}
+
+/* atalho de teclado: aparece so quando recebe o foco */
+.pular{position:absolute;left:12px;top:-60px;z-index:2000;padding:10px 16px;border-radius:8px;background:#fff;color:#0a0c1c;font-weight:600;text-decoration:none}
+.pular:focus{top:12px;outline:2px solid #ee5911;outline-offset:2px}
+h1,h2,h3{text-wrap:balance}
+section[id],footer[id]{scroll-margin-top:72px}
+a,button,summary{touch-action:manipulation}
 </style>
 <script type="application/ld+json">
 {
@@ -415,6 +422,7 @@ body.parado .trilho{animation-play-state:paused}
 </head>
 <body>
 
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo" id="topo">
   <div class="env">
     <svg class="logo-svg" preserveAspectRatio="xMidYMid meet" width="1342" height="270" viewBox="0 0 1342 270" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -452,7 +460,7 @@ body.parado .trilho{animation-play-state:paused}
   </div>
 </header>
 
-<main id="conteudo">
+<main id="conteudo" tabindex="-1">
 <section class="hero">
   <video class="hero-video" autoplay muted loop playsinline webkit-playsinline preload="auto" aria-hidden="true"
          poster="img/hero_fire_poster.jpg" src="assets/hero_fire.mp4"></video>

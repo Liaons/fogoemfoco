@@ -270,7 +270,7 @@
         ${radio('aberta', fic.aberta ? `A área aberta no painel: ${nomeArea(fic.aberta)}` : 'A área aberta no painel <small>(nenhuma no momento)</small>', !fic.aberta)}
         ${radio('outra', fic.outra ? `Outra: ${nomeArea(fic.outra)}` : 'Outra área')}
         <div class="busca-ficha"${fic.modo === 'outra' ? '' : ' hidden'}>
-          <input type="search" id="busca-ficha" placeholder="Buscar estado, município, bioma, UC ou TI" autocomplete="off"
+          <input type="search" id="busca-ficha" placeholder="Buscar estado, município, bioma, UC ou TI…" autocomplete="off"
             aria-label="Buscar área para a ficha">
           <div id="achados-ficha" class="achados"></div></div></div></div>
       <div class="passo-dl"><h4>2 · Variável do mapa <small>${semRk ? 'colore o mapa' : 'colore o mapa e destaca o ranque'}</small></h4>

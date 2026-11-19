@@ -3,9 +3,8 @@ html, body { height: 100%; }
 body {
   margin: 0; font-family: var(--sans); font-size: 15px; color: var(--texto);
   background: var(--fundo); overflow: hidden; -webkit-font-smoothing: antialiased;
-  overscroll-behavior: none;   /* arrastar o mapa no celular nao recarrega a pagina */
 }
-h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; line-height: 1.1; letter-spacing: .005em; }
+h1, h2, h3 { text-wrap: balance; font-family: var(--display); font-weight: 700; margin: 0; line-height: 1.1; letter-spacing: .005em; }
 button, input { font: inherit; color: inherit; }
 
 .app { display: grid; grid-template-rows: 64px 1fr; height: 100vh; height: 100dvh; }
@@ -422,3 +421,11 @@ button, input { font: inherit; color: inherit; }
   .legenda#legenda { left: 12px; bottom: 26px; width: min(300px, calc(100% - 24px)); }
   .leaflet-control-zoom { display: none; }
 }
+
+/* atalho de teclado: aparece so quando recebe o foco */
+.pular{position:absolute;left:12px;top:-60px;z-index:2000;padding:10px 16px;border-radius:8px;background:#fff;color:#0a0c1c;font-weight:600;text-decoration:none}
+.pular:focus{top:12px;outline:2px solid #ee5911;outline-offset:2px}
+button, a, summary { touch-action: manipulation; }
+/* rolar dentro das gavetas e da janela nao arrasta a pagina; no mouse, sem efeito elastico */
+.controles, .painel, .caixa-download { overscroll-behavior: contain; }
+@media (pointer: fine) { html, body { overscroll-behavior: none; } }

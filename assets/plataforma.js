@@ -496,10 +496,18 @@ function ligarGavetas() {
   TELA_MEDIA.addEventListener('change', () => { gaveta('esq', false); gaveta('dir', false); });
 }
 
+// O endereco guarda recorte, variavel e area aberta: o link copiado abre a mesma vista.
+function guardarUrl() {
+  const p = new URLSearchParams({ camada: estado.camada, variavel: estado.variavel });
+  if (estado.selecionado) p.set('area', estado.selecionado);
+  history.replaceState(null, '', '?' + p);
+}
+
 async function selecionar(rid, comZoom, abrir = true) {
   const reg = estado.atributos[estado.camada][rid];
   if (!reg) return;
   estado.selecionado = rid;
+  guardarUrl();
   if (abrir && TELA_MEDIA.matches) gaveta('dir', true);
   const gfa = await serie('gfa', estado.camada, reg.chunk || null);
   const clima = await serie('clima', estado.camada, reg.chunk || null);
@@ -1246,6 +1254,7 @@ function limparPainel() {
   estado.graficos.forEach(g => g.destroy());
   estado.graficos = [];
   estado.selecionado = null;
+  guardarUrl();
   $('#painel').innerHTML = resumoCamada();
   $('#painel').querySelectorAll('[data-rid]').forEach(b => { b.onclick = () => selecionar(b.dataset.rid, true); });
 }
@@ -1362,6 +1371,7 @@ async function trocarCamada(id) {
 
 function trocarVariavel(id) {
   estado.variavel = id;
+  guardarUrl();
   // no celular a gaveta fica aberta: a descricao da variavel abre embaixo dela, e o toque fora fecha
   calcularFaixa();
   desenhar(false);
@@ -1516,6 +1526,8 @@ async function iniciar() {
   const url = new URLSearchParams(location.search);
   const pedida = url.get('camada');
   if (pedida && CAMADAS.some(c => c.id === pedida)) estado.camada = pedida;
+  const varPedida = url.get('variavel');
+  if (varPedida && VARIAVEIS.some(v => v.id === varPedida)) estado.variavel = varPedida;
 
   await garantirCamada(estado.camada);
   garantirVariavel();
@@ -1524,6 +1536,8 @@ async function iniciar() {
   montarControles();
   limparPainel();
   ocupado(false);
+  const areaPedida = url.get('area');
+  if (areaPedida && estado.atributos[estado.camada][areaPedida]) selecionar(areaPedida, true);
 
   $('#filtro-uf').addEventListener('change', (e) => trocarFiltro(e.target.value));
   let atraso;

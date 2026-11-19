@@ -59,4 +59,4 @@
 .busca-ficha { padding-left: 22px; }
 .busca-ficha input { width: 100%; font: inherit; font-size: 13.5px; padding: 6px 9px; border-radius: 7px;
   border: 1px solid var(--borda); background: var(--superficie-2); color: var(--texto); }
-#var-ficha { max-width: 100%; }
+#var-ficha { max-width: 100%; background: var(--superficie-2); color: var(--texto); }
