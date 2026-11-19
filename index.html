@@ -327,6 +327,20 @@ h1,h2,h3{text-wrap:balance}
 section[id],footer[id]{scroll-margin-top:72px}
 a,button,summary{touch-action:manipulation}
 @media(max-width:700px){.colunas-rodape a,.fim .autor{padding:13px 0 10px}.ficha .acoes a{min-height:44px}.setas button{width:48px;height:48px}}
+
+/* plataforma num iPad: a interface real, sem inclinacao, na mesma borda do texto */
+.vitrine .cabeca-vit{display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.vitrine .cabeca-vit p{max-width:58ch;margin:22px 0 0;font-size:17px;color:#4d5068}
+.ipad{display:block;margin-top:56px;position:relative;padding:2.1%;border-radius:clamp(18px,3.2vw,44px);
+  background:linear-gradient(145deg,#2a2c33,#15161b);box-shadow:0 0 0 1.5px #3a3c44 inset,0 40px 80px -30px rgba(20,22,44,.55),0 12px 24px -12px rgba(20,22,44,.35);
+  transition:transform .4s cubic-bezier(.2,.7,.3,1),box-shadow .4s}
+.ipad::before{content:'';position:absolute;top:calc(1.05% - 3px);left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#3d4a66,#0d0f14 70%)}
+.ipad img{display:block;width:100%;height:auto;border-radius:clamp(6px,1.1vw,16px)}
+.ipad:hover{transform:translateY(-3px);box-shadow:0 0 0 1.5px #3a3c44 inset,0 50px 90px -30px rgba(20,22,44,.6),0 14px 28px -12px rgba(20,22,44,.4)}
+.ipad:focus-visible{outline:3px solid var(--laranja);outline-offset:6px}
+@media(prefers-reduced-motion:reduce){.ipad{transition:none}.ipad:hover{transform:none}}
+@media(max-width:700px){.ipad{margin-top:36px;padding:2.6%}}
 </style>
 <script type="application/ld+json">
 {
@@ -450,6 +464,7 @@ a,button,summary{touch-action:manipulation}
 </svg>
 
     <nav class="nav">
+      <a href="#plataforma">Plataforma</a>
       <a href="#panorama">Panorama</a>
       <a href="#recortes">Recortes</a>
       <a href="#metodo">Método</a>
@@ -508,6 +523,27 @@ a,button,summary{touch-action:manipulation}
     <span>Terras indígenas <em>657</em></span>
   </div>
 </div>
+
+<section class="secao claro vitrine" id="plataforma">
+  <div class="env">
+    <div class="cabeca-vit rev">
+      <div>
+        <div class="rotulo">Plataforma</div>
+        <h2 class="titulo menor">Um clique abre o retrato do território</h2>
+        <p>Escolha a variável no painel da esquerda e clique num estado, município, bioma, unidade de
+        conservação ou terra indígena. À direita aparecem o ranque na série desde 2002, a área queimada,
+        as métricas dos incêndios, o clima e os eventos de fogo. A ficha da área sai em PDF.</p>
+      </div>
+      <a class="botao" href="plataforma.html">Abrir a plataforma <span class="seta">→</span></a>
+    </div>
+    <a class="ipad rev" href="plataforma.html?camada=UF&amp;variavel=aq_ranque&amp;area=60000025" aria-label="Abrir a plataforma na Bahia, com o ranque de área queimada">
+      <img src="img/plataforma/plataforma-bahia-1800.jpg"
+           srcset="img/plataforma/plataforma-bahia-900.jpg 900w, img/plataforma/plataforma-bahia-1800.jpg 1800w"
+           sizes="(max-width:1240px) 92vw, 1160px" width="1800" height="1349" loading="lazy"
+           alt="Plataforma Fogo em Foco aberta na Bahia: mapa dos estados pelo ranque de área queimada, painel de variáveis à esquerda e, à direita, a Bahia em 4º lugar na série desde 2002, com área queimada, métricas dos incêndios e gráfico anual">
+    </a>
+  </div>
+</section>
 
 <section class="secao" id="panorama">
   <div class="env duplo">
