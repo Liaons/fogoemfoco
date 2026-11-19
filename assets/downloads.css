@@ -1,10 +1,10 @@
 /* Botao na barra do topo e janela "Baixar dados e analises". */
 .barra .baixar {
   display: inline-flex; white-space: nowrap; align-items: center; gap: 7px; cursor: pointer;
-  border: 1px solid var(--laranja); background: var(--laranja); color: #fff; border-radius: 999px;
+  border: 1px solid #c9450c; background: #c9450c; color: #fff; border-radius: 999px;
   padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 600;
 }
-.barra .baixar:hover { filter: brightness(1.08); }
+.barra .baixar:hover { background: #a8390a; border-color: #a8390a; }
 @media (max-width: 820px) { .barra .periodo + .baixar { margin-left: auto; } }
 @media (max-width: 560px) {
   .barra .baixar .rotulo { display: none; }

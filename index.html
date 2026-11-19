@@ -80,10 +80,10 @@ a{color:inherit;text-decoration:none}
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p{max-width:46ch;color:#c9cbd8;font-size:19px;margin:30px 0 40px}
 .hero-acoes{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-.botao{display:inline-flex;align-items:center;gap:12px;background:var(--laranja);color:#fff;
+.botao{display:inline-flex;align-items:center;gap:12px;background:var(--laranja-esc);color:#fff;
        border-radius:999px;padding:16px 30px;font-weight:500;font-size:16px;
        transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s,background .3s}
-.botao:hover{transform:translateY(-2px);background:var(--laranja-esc);box-shadow:0 12px 34px rgba(238,89,17,.28)}
+.botao:hover{transform:translateY(-2px);background:#a8390a;box-shadow:0 12px 34px rgba(238,89,17,.28)}
 .botao .seta{transition:transform .3s}
 .botao:hover .seta{transform:translateX(5px)}
 .link-simples{display:inline-flex;align-items:center;gap:10px;color:var(--suave);font-size:16px;padding:16px 8px}
@@ -108,11 +108,11 @@ a{color:inherit;text-decoration:none}
 .num.ok .barra::after{transform:scaleX(1)}
 .num b i{font-style:normal}
 .num b small{font-size:.42em;color:var(--suave);font-weight:600;margin-left:.15em}
-.nota-num{margin-top:44px;font-size:13.5px;color:var(--suave-claro)}
+.nota-num{margin-top:44px;font-size:13.5px;color:var(--suave)}
 
 /* seção clara */
 .claro{background:var(--creme);color:#14162c}
-.claro .rotulo{color:var(--laranja-esc)}
+.claro .rotulo{color:#ad3b09}
 .rotulo{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ambar);margin-bottom:22px}
 .secao{padding:130px 0}
 .titulo{font-size:clamp(40px,6vw,84px);max-width:15ch}
@@ -140,7 +140,7 @@ a{color:inherit;text-decoration:none}
 .trilho{display:flex;gap:48px;width:max-content;animation:desliza 34s linear infinite}
 .marquise:hover .trilho{animation-play-state:paused}
 @keyframes desliza{to{transform:translateX(-50%)}}
-.trilho span{font-family:var(--display);font-weight:600;font-size:clamp(26px,2.4vw,34px);color:#464b74;
+.trilho span{font-family:var(--display);font-weight:600;font-size:clamp(26px,2.4vw,34px);color:#7378a6;
              white-space:nowrap;display:inline-flex;align-items:baseline;gap:14px;letter-spacing:.01em}
 .trilho span em{font-style:normal;font-family:var(--display);font-weight:700;font-size:1em;
                 color:var(--laranja);font-variant-numeric:tabular-nums}
@@ -153,9 +153,9 @@ a{color:inherit;text-decoration:none}
 .mes i{display:block;height:64px;border-radius:5px;background:#1b1f3d;position:relative;overflow:hidden}
 .mes i::after{content:'';position:absolute;inset:auto 0 0 0;background:linear-gradient(180deg,var(--ambar),var(--laranja));
               height:var(--h,0%);transition:height .9s cubic-bezier(.2,.7,.2,1)}
-.mes span{display:block;margin-top:8px;font-size:10px;letter-spacing:.06em;color:var(--suave-claro);text-transform:uppercase}
+.mes span{display:block;margin-top:8px;font-size:10px;letter-spacing:.06em;color:var(--suave);text-transform:uppercase}
 .mes.pico span{color:var(--ambar)}
-.legenda-cal{margin-top:20px;font-size:13px;color:var(--suave-claro);line-height:1.6}
+.legenda-cal{margin-top:20px;font-size:13px;color:var(--suave);line-height:1.6}
 @media(max-width:700px){.mes i{height:44px}.mes span{font-size:8px}}
 
 .moldura-mapa{border-radius:26px;background:var(--tinta-2);border:1px solid var(--borda);
@@ -207,15 +207,15 @@ a.inst:focus-visible .cor{opacity:1}
                    margin-bottom:14px;color:var(--claro)}
 .colunas-rodape p{margin:0 0 12px;font-size:14px;line-height:1.65;color:var(--suave)}
 .colunas-rodape .marca-rodape{height:30px;width:auto;display:block;margin-bottom:16px}
-.colunas-rodape .citacao{border-left:2px solid var(--laranja);padding-left:16px;color:var(--suave-claro)}
-.colunas-rodape a{color:var(--claro);border-bottom:1px solid var(--laranja);padding-bottom:2px;
+.colunas-rodape .citacao{border-left:2px solid var(--laranja);padding-left:16px;color:var(--suave)}
+.colunas-rodape a{display:inline-block;color:var(--claro);border-bottom:1px solid var(--laranja);padding:5px 0 3px;
                   transition:color .3s}
 .colunas-rodape a:hover{color:var(--laranja)}
 .fim{margin-top:56px;padding-top:26px;border-top:1px solid var(--borda);display:flex;flex-wrap:wrap;
-     gap:20px;justify-content:space-between;font-size:13px;color:var(--suave-claro)}
+     gap:20px;justify-content:space-between;font-size:13px;color:var(--suave)}
 .fim code{font-size:12px;color:var(--suave)}
-.fim .autor{font-weight:700;color:var(--claro);border-bottom:1px solid transparent;
-            padding-bottom:1px;transition:color .3s,border-color .3s}
+.fim .autor{display:inline-block;font-weight:700;color:var(--claro);border-bottom:1px solid transparent;
+            padding:5px 0 2px;transition:color .3s,border-color .3s}
 .fim .autor:hover{color:var(--laranja);border-bottom-color:var(--laranja)}
 .fim .autor:focus-visible{outline:2px solid var(--laranja);outline-offset:3px;border-radius:3px}
 
@@ -291,6 +291,18 @@ a.inst:focus-visible .cor{opacity:1}
 .claro .inst .neg{opacity:0}
 .claro .inst .cor{opacity:1}
 .claro .inst:hover,.claro a.inst:focus-visible{background:#fff;box-shadow:0 10px 24px -14px rgba(20,22,44,.35)}
+
+/* botao para pausar o video do hero e a faixa animada */
+.pausa{position:absolute;right:28px;bottom:28px;z-index:3;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.3);background:rgba(10,12,28,.45);color:#fff;cursor:pointer;backdrop-filter:blur(6px);transition:background .25s}
+.pausa:hover{background:rgba(10,12,28,.75)}
+.pausa:focus-visible{outline:2px solid var(--ambar);outline-offset:3px}
+.pausa .i-tocar{display:none}
+.pausa[aria-pressed="true"] .i-tocar{display:inline}
+.pausa[aria-pressed="true"] .i-pausa{display:none}
+body.parado .trilho{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.trilho{animation:none}}
+@media(max-width:700px){.pausa{right:18px;bottom:18px}}
 </style>
 </head>
 <body>
@@ -331,6 +343,7 @@ a.inst:focus-visible .cor{opacity:1}
   </div>
 </header>
 
+<main id="conteudo">
 <section class="hero">
   <video class="hero-video" autoplay muted loop playsinline webkit-playsinline preload="auto" aria-hidden="true"
          poster="img/hero_fire_poster.jpg" src="assets/hero_fire.mp4"></video>
@@ -346,6 +359,7 @@ a.inst:focus-visible .cor{opacity:1}
     </div>
   </div>
   <div class="rolar"><i></i>role a página</div>
+  <button class="pausa" type="button" aria-pressed="false" aria-label="Pausar animações"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="i-pausa" x="6" y="5" width="4" height="14" rx="1"/><rect class="i-pausa" x="14" y="5" width="4" height="14" rx="1"/><path class="i-tocar" d="M8 5l11 7-11 7z"/></svg></button>
 </section>
 
 <section class="numeros">
@@ -504,6 +518,8 @@ a.inst:focus-visible .cor{opacity:1}
   </div>
 </section>
 
+</main>
+
 <footer class="rodape" id="dados">
   <div class="env">
     <div class="rodape-topo rev">
@@ -589,7 +605,7 @@ if (video) {
   } else {
     const mostrar = () => video.classList.add('pronto');
     let visivel = true;
-    const tocar = () => { if (visivel) video.play().catch(mostrar); };   // bloqueado: fica o poster
+    const tocar = () => { if (visivel && !document.body.classList.contains('parado')) video.play().catch(mostrar); };   // bloqueado: fica o poster
     if (video.readyState >= 3 && !video.paused) mostrar();
     video.addEventListener('playing', mostrar);
     tocar();
@@ -604,6 +620,19 @@ if (video) {
       if (visivel) tocar(); else video.pause();
     }).observe(video);
   }
+}
+
+// pausa: para o video e a faixa animada; respeita quem ja pediu menos movimento
+const pausa = document.querySelector('.pausa');
+if (pausa) {
+  const aplicar = (parar) => {
+    pausa.setAttribute('aria-pressed', String(parar));
+    pausa.setAttribute('aria-label', parar ? 'Retomar animações' : 'Pausar animações');
+    document.body.classList.toggle('parado', parar);
+    if (video) { if (parar) video.pause(); else video.play().catch(() => {}); }
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) pausa.hidden = true;
+  pausa.addEventListener('click', () => aplicar(pausa.getAttribute('aria-pressed') !== 'true'));
 }
 
 // tooltip simples no mapa da seção de panorama
