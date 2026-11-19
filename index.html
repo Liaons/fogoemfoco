@@ -194,10 +194,10 @@ a{color:inherit;text-decoration:none}
    Todas as placas tem o mesmo tamanho, e as duas versoes da logo ocupam a mesma
    celula da grade: a troca nao mexe em nada em volta. */
 .logos{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:46px}
-.inst{position:relative;display:grid;place-items:center;width:176px;height:92px;padding:14px 18px;
+.inst{position:relative;display:grid;place-items:center;width:194px;height:101px;padding:15px 20px;
       border-radius:16px;transition:transform .35s cubic-bezier(.2,.7,.2,1),background .35s}
-.inst img{grid-area:1/1;max-width:100%;max-height:52px;width:auto;height:auto;display:block;transition:opacity .35s}
-.inst.inpe img{max-height:62px} .inst.ligabom img{max-height:64px} .inst.trees img{max-height:44px}
+.inst img{grid-area:1/1;max-width:100%;max-height:57px;width:auto;height:auto;display:block;transition:opacity .35s}
+.inst.inpe img{max-height:68px} .inst.ligabom img{max-height:70px} .inst.trees img{max-height:48px}
 .inst .cor{opacity:0}
 .inst .neg{opacity:.88;filter:brightness(0) invert(1)}
 .inst.crua .neg{filter:none}
@@ -210,9 +210,9 @@ a.inst:focus-visible .neg{opacity:0}
 a.inst:focus-visible .cor{opacity:1}
 @media(max-width:700px){
   .logos{gap:8px}
-  .inst{width:132px;height:72px;padding:10px 13px}
-  .inst img{max-height:38px} .inst.inpe img{max-height:46px} .inst.ligabom img{max-height:50px}
-  .inst.trees img{max-height:32px}}
+  .inst{width:145px;height:79px;padding:11px 14px}
+  .inst img{max-height:42px} .inst.inpe img{max-height:51px} .inst.ligabom img{max-height:55px}
+  .inst.trees img{max-height:35px}}
 @media(prefers-reduced-motion:reduce){.inst,.inst img{transition:none}.inst:hover{transform:none}}
 
 /* rodapé */
