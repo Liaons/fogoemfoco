@@ -65,6 +65,7 @@ button, input { font: inherit; color: inherit; }
 }
 .opcao:hover { background: var(--fundo); }
 .opcao[aria-pressed="true"] { background: var(--selecionado); color: var(--sobre-selecionado); }
+.opcao[aria-pressed="true"] > span:first-child { font-weight: 700; }
 /* subtitulo de cada grupo de variaveis: mais discreto que o h2 do bloco */
 .grupo {
   font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--suave);
