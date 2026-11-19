@@ -218,6 +218,26 @@ a.inst:focus-visible .cor{opacity:1}
             padding-bottom:1px;transition:color .3s,border-color .3s}
 .fim .autor:hover{color:var(--laranja);border-bottom-color:var(--laranja)}
 .fim .autor:focus-visible{outline:2px solid var(--laranja);outline-offset:3px;border-radius:3px}
+
+/* variaveis da plataforma, na secao Metodo: grupos em colunas, nome que abre a descricao */
+.variaveis{margin-top:84px}
+.variaveis>h3{font-size:clamp(24px,2.4vw,32px);margin-bottom:34px}
+.grupos-var{display:grid;grid-template-columns:repeat(3,1fr);gap:56px 48px}
+@media(max-width:960px){.grupos-var{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.grupos-var{grid-template-columns:1fr;gap:40px}}
+.grupo-var h4{font-family:var(--display);font-weight:600;font-size:21px;letter-spacing:.02em;color:var(--ambar);margin:0 0 8px}
+.grupo-var details{border-bottom:1px solid var(--borda)}
+.grupo-var summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:13px 2px;font-weight:600;font-size:17px;line-height:1.3;transition:color .2s}
+.grupo-var summary::-webkit-details-marker{display:none}
+.grupo-var summary::after{content:'';flex:none;width:8px;height:8px;margin-right:3px;border:solid var(--suave);border-width:0 1.5px 1.5px 0;
+  transform:translateY(-3px) rotate(45deg);transition:transform .25s,border-color .2s}
+.grupo-var details[open] summary::after{transform:translateY(2px) rotate(-135deg);border-color:var(--laranja)}
+.grupo-var summary:hover,.grupo-var details[open] summary{color:var(--ambar)}
+.grupo-var summary:focus-visible{outline:2px solid var(--laranja);outline-offset:2px;border-radius:3px}
+.grupo-var details p{margin:0 0 16px;padding:0 2px;font-size:14.5px;line-height:1.6;color:#c3c5d4;max-width:60ch}
+.grupo-var details p small{display:block;margin-top:7px;font-size:12.5px;color:var(--suave)}
+@media(prefers-reduced-motion:reduce){.grupo-var summary::after{transition:none}}
 </style>
 </head>
 <body>
@@ -358,6 +378,10 @@ a.inst:focus-visible .cor{opacity:1}
         <p class="legenda-cal">Distribuição típica da área queimada ao longo do período,
         com o pico entre julho e setembro.</p>
       </div>
+    </div>
+    <div class="variaveis rev">
+      <h3>As variáveis da plataforma</h3>
+      <div class="grupos-var" id="grupos-var"></div>
     </div>
   </div>
 </section>
@@ -513,6 +537,16 @@ if (molde) {
   });
   molde.addEventListener('mouseleave', () => balao.style.opacity = 0);
 }
+
+// variaveis da plataforma na secao Metodo, lidas do mesmo arquivo do painel esquerdo da plataforma
+fetch('assets/variaveis.json', { cache: 'no-cache' }).then(r => r.json()).then(dados => {
+  const alvo = document.getElementById('grupos-var');
+  const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  alvo.innerHTML = dados.grupos.map(g => `<div class="grupo-var"><h4>${esc(g.rotulo)}</h4>` +
+    dados.variaveis.filter(v => v.grupo === g.id).map(v =>
+      `<details><summary>${esc(v.rotulo)}</summary><p>${esc(v.descricao)}<small>Fonte: ${esc(v.fonte)}</small></p></details>`
+    ).join('') + '</div>').join('');
+}).catch(() => document.querySelector('.variaveis')?.remove());
 </script>
 </body>
 </html>
