@@ -1098,7 +1098,11 @@ function montarOpcoes(alvo, itens, atual, aoTrocar) {
     // a variavel escolhida abre para baixo com a descricao (assets/variaveis.json): sem balao,
     // para funcionar igual no celular
     const d = it.id === atual && estado.descricoes[it.id];
-    if (d) b.insertAdjacentHTML('beforeend', `<span class="desc">${d.descricao}<em>Fonte: ${d.fonte}</em></span>`);
+    if (d) {
+      const desc = document.createElement('span'), fonte = document.createElement('em');
+      desc.className = 'desc'; desc.textContent = d.descricao; fonte.textContent = 'Fonte: ' + d.fonte;
+      desc.append(fonte); b.append(desc);
+    }
     b.onclick = () => aoTrocar(it.id);
     alvo.appendChild(b);
   });
@@ -1497,7 +1501,8 @@ async function iniciar() {
   estado.meta = await json('meta.json');
   // descricoes das variaveis: o mesmo arquivo da pagina inicial; sem ele, o menu so nao abre
   try {
-    const r = await fetch('assets/variaveis.json?v=' + VERSAO_DADOS);
+    // sem carimbo: o arquivo muda sem mudar dados/, entao revalida a cada visita
+    const r = await fetch('assets/variaveis.json', { cache: 'no-cache' });
     estado.descricoes = Object.fromEntries((await r.json()).variaveis.map(v => [v.id, v]));
   } catch (e) { estado.descricoes = {}; }
   $('#periodo').textContent = 'Período ' + estado.meta.periodo_curto + ' · ' + estado.meta.periodo_extenso;

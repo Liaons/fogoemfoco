@@ -381,7 +381,11 @@ body.parado .trilho{animation-play-state:paused}
     "Global Fire Atlas",
     "ERA5"
    ],
-   "sameAs": "https://github.com/Liaons/fogoemfoco"
+   "distribution": {
+    "@type": "DataDownload",
+    "contentUrl": "https://github.com/Liaons/fogoemfoco/archive/refs/heads/main.zip",
+    "encodingFormat": "application/zip"
+   }
   },
   {
    "@type": "Report",
@@ -736,7 +740,7 @@ if (pausa) {
     pausa.setAttribute('aria-pressed', String(parar));
     pausa.setAttribute('aria-label', parar ? 'Retomar animações' : 'Pausar animações');
     document.body.classList.toggle('parado', parar);
-    if (video) { if (parar) video.pause(); else video.play().catch(() => {}); }
+    if (video) { if (parar) video.pause(); else if (video.getBoundingClientRect().bottom > 0) video.play().catch(() => {}); }
   };
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) pausa.hidden = true;
   pausa.addEventListener('click', () => aplicar(pausa.getAttribute('aria-pressed') !== 'true'));
@@ -775,7 +779,7 @@ const estante = document.querySelector('.estante');
 const setas = document.querySelector('.setas');
 if (estante && setas) {
   const [ant, prox] = setas.querySelectorAll('button');
-  const passo = () => (estante.querySelector('.edicao')?.offsetWidth || 600) + 40;
+  const passo = () => (estante.querySelector('.edicao')?.offsetWidth || 600) + (parseFloat(getComputedStyle(estante).columnGap) || 0);
   const atualizar = () => {
     const sobra = estante.scrollWidth - estante.clientWidth;
     setas.hidden = sobra < 8;
